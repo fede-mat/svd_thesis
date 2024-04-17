@@ -1,15 +1,17 @@
 \documentclass[11pt]{article}
-\usepackage{amsmath}
-\usepackage{amsthm}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{geometry}
-\usepackage{hyperref}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{babel}
-\usepackage{tikz}
-\usetikzlibrary{3d}
+\usepackage{amsmath, amsthm, amssymb} % Pacchetti per la matematica
+\usepackage{graphicx} % Per l'inserimento di immagini
+\usepackage{geometry} % Per la gestione del layout della pagina
+\usepackage{hyperref} % Per i collegamenti ipertestuali
+\usepackage[utf8]{inputenc} % Per la codifica dei caratteri
+\usepackage[T1]{fontenc} % Per la codifica dei font
+\usepackage[italian]{babel} % Lingua italiana
+\usepackage{tikz} % Per disegnare grafici e diagrammi
+\usetikzlibrary{3d} % Libreria TikZ per grafici 3D
+\usepackage{mathrsfs} % Per lettere calligrafiche
+\usepackage[table]{xcolor} % Per colorare le tabelle
+\usepackage{matlab} % Per l'inserimento di codice MATLAB
+\usepackage{makeidx}
 
 % Definizioni personalizzate
 \newtheorem{proposition}{Proposizione}
@@ -18,11 +20,14 @@
 \newtheorem{lemma}{Lemma}
 \newtheorem{definition}{Definizione}
 \newcommand{\oss}{\textit{Osservazione: }}
-\newcommand{\R}{\mathbb R}
+\newcommand{\R}{\mathbb{R}} % Simbolo per i numeri reali
+
+\sloppy
+\makeindex
 
 \begin{document}
 
-\title{Decomposizione Matriciale SVD \\ (Singular Value Decomposition)}
+\title{Tesi}
 \author{Federico Riva\\Ingegneria Matematica\\Politecnico di Milano}
 \date{Relatore: Professor Marco Verani}
 
@@ -30,16 +35,18 @@
 \newpage
 \tableofcontents
 \newpage
-\section{Introduzione}
-La decomposizione SVD è una fattorizzazione che consente di rappresentare una matrice come il prodotto di tre matrici ciascuna con caratteristiche specifiche. Le applicazioni di questo metodo possono essere ritrovate in una vasta gamma di campi tra cui l'analisi dei dati, il machine learning e l'elaborazione delle immagini.
+\section{Decomposizione SVD}
+\subsection{Introduzione}
+La decomposizione SVD è una fattorizzazione algebrica che consente di rappresentare una matrice come il prodotto di tre matrici ciascuna con caratteristiche specifiche. Le applicazioni di questo metodo possono essere ritrovate in una vasta gamma di campi tra cui l'analisi dei dati, il machine learning e l'elaborazione delle immagini.
 
 
-\section{Definizione}
+\subsection{Definizione}
 Sia $A\in\mathbb{R}^{m\times n}$, oppure equivalentemente $A\in\mathbb{C}^{m\times n}$, allora la decomposizione SVD della una matrice nel caso $m>n$ è definita come:
 
 \[
-A = U \Sigma V^T
+A = U \Sigma V^\top      
 \]
+$$A = \sum_{i=1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top       $$
 \[
 \begin{bmatrix}
 a_{11} & a_{12} & \cdots & a_{1n} \\
@@ -54,7 +61,7 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 0 & 0 & \cdots & 0 \\
 \vdots & \vdots & \ddots & \vdots \\
 0 & 0 & \cdots & 0
-\end{bmatrix} \mathbf{[v_1 \, v_2 \, \dots \, v_n]}^T
+\end{bmatrix} \mathbf{[v_1 \, v_2 \, \dots \, v_n]}^\top      
 \]
 Mentre per $m<n$:
 \[
@@ -69,78 +76,89 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 0 & \sigma_2 & \cdots & 0 & 0 & \cdots & 0 \\
 \vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
 0 & 0 & \cdots & \sigma_r & 0 & \cdots & 0
-\end{bmatrix} \mathbf{[v_1 \, v_2 \, \dots \, v_n]}^T
+\end{bmatrix} \mathbf{[v_1 \, v_2 \, \dots \, v_n]}^\top      
 \]
 Dove:
 \begin{itemize}
     \item $U\in\mathbb{R}^{m\times m}$ è una matrice ortogonale contenente i vettori singolari sinistri di $A$,
-    \item $\Sigma\in\mathbb{R}^{m\times n}$ è una matrice diagonale contenente i valori singolari di $A$ ordinati in modo decrescente,
+    \item $\Sigma\in\mathbb{R}^{m\times n}$ è una matrice pseudodiagonale contenente i valori singolari di $A$ ordinati in modo decrescente,
     \item $V\in\mathbb{R}^{n\times n}$ è una matrice ortogonale contenente i vettori singolari destri di $A$.
 \end{itemize}
 
 \begin{definition}
-    \textbf{Matrice Ortogonale}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice ortogonale se $Q^TQ=I$.
+    \textbf{Matrice Ortogonale}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice ortogonale se $Q^\top      Q=I$.
 \end{definition}
 \begin{definition}
-    \textbf{Matrice Simmetrica}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice simmetrica se $Q^T=Q$.
+	\textbf{Matrice Pseudodiagonale}\\ Una matrice $M$ si dice pseudodiagonale se $m_{ij}=0 \ \forall \ i\neq j$.
+\end{definition}
+\begin{definition}
+    \textbf{Matrice Simmetrica}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice simmetrica se $Q^\top      =Q$.
 \end{definition}
 \begin{definition}
     \textbf{Forma Quadratica}\\ Si definisce forma quadratica un polinomio di secondo grado in $n$ variabili $p: \mathbb{R}^n \rightarrow \mathbb{R}$ t.c.
     \[
-    p(x)=p(x_1,\dots,x_n)=\sum_{1 \leq i,j \leq n}a_{ij}x_ix_j=a_{11}x_1^2+a_{12}x_1x_2 + \dots + a_{nn-1}x_nx_{n-1}+a_{nn}x_n^2=\mathbf{x}^TA\mathbf{x}
+    p(x)=p(x_1,\dots,x_n)=\sum_{1 \leq i,j \leq n}a_{ij}x_ix_j=a_{11}x_1^2+a_{12}x_1x_2 + \dots + a_{nn-1}x_nx_{n-1}+a_{nn}x_n^2=\mathbf{x}^\top      A\mathbf{x}
     \]
     dove $\mathbf{x} = (x_1, \dots, x_n)$ e $A$ è una matrice simmetrica di dimensione $n \times n$.
 \end{definition}
-
 \begin{proposition}\label{prop 1}
 \textbf{}\\
 \textit{Hp:} Data una qualsiasi $M\in\mathbb{R}^{m \times n}$\\
-\textit{Ts:} $D=M^TM$ e $S=MM^T$ sono  matrici simmetriche e definite positive.
+\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e definite positive.
 \end{proposition}
 \begin{proof}
-1) Vogliamo dimostrare che $D=D^T$. Segue quindi dalle proprietà di trasposizione del prodotto di due matrici: $D^T=(M^TM)^T=MM^T=D$. Si dimostra in maniera analoga il risultato per $S$.\\
-2) Per dimostrare la semipositività della matrice $A^TA$ dal momento che è una matrice quadrata possiamo studiare il segno della forma quadratica associata. Se quest'ultima sarà positiva allora lo saranno anche tutti gli autovalori.\\
-$$ \forall \mathbf{x}\neq 0: \mathbf{x} \in \R^n$$ $$\mathbf{x}^TA^TA\mathbf{x}=(A\mathbf{x})^T(A\mathbf{x})= \|A\mathbf{x}\|^2\geq 0$$
+1) Vogliamo dimostrare che $D=D^\top      $. Segue quindi dalle proprietà di trasposizione del prodotto di due matrici: $D^\top      =(M^\top      M)^\top      =MM^\top      =D$. Si dimostra in maniera analoga il risultato per $S$.\\
+2) Per dimostrare la semipositività della matrice $A^\top      A$ dal momento che è una matrice quadrata possiamo studiare il segno della forma quadratica associata. Se quest'ultima sarà positiva allora lo saranno anche tutti gli autovalori.\\
+$$ \forall \mathbf{x}\neq 0: \mathbf{x} \in \R^n$$ $$\mathbf{x}^\top      A^\top      A\mathbf{x}=(A\mathbf{x})^\top      (A\mathbf{x})= \|A\mathbf{x}\|^2\geq 0$$
 \end{proof}
 \noindent
 \textit{Osservazione}: Gli autovalori che otterremo dalle due matrici saranno $\geq$ 0 e potremo quindi calcolarne la radice quadrata.
 \begin{proposition}\label{prop 2}
 \textbf{}\\
 \textit{Hp:} Sia $A \in \R^{m \times n}$\\
-\textit{Ts:} $A^TA$ e $AA^t$ hanno gli stessi autovalori non nulli.
+\textit{Ts:} $A^\top      A$ e $AA^\top      $ hanno gli stessi autovalori non nulli.
 \end{proposition}
 \begin{proof}
-Ipotizziamo che la coppia autovalor' autovettore $(\mathbf{x},\lambda)$ sia associata alla matrice $A^TA$. Possiamo quindi scrivere $$A^TA\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^TA\mathbf{x}=\lambda A\mathbf{x}$$
-Ma allora definendo $\mathbf{y}=A\mathbf{x}$ possiamo riscrivere $$AA^T\mathbf{y}=\lambda \mathbf{y}$$
-Il che conclude la dimostrazione poichè prova che  $\lambda$ è un autovalore anche della matrice $AA^T$
+Ipotizziamo che la coppia autovalori autovettore $(\mathbf{x},\lambda)$ sia associata alla matrice $A^\top      A$. Possiamo quindi scrivere $$A^\top      A\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^\top      A\mathbf{x}=\lambda A\mathbf{x}$$
+Ma allora definendo $\mathbf{y}=A\mathbf{x}$ possiamo riscrivere $$AA^\top      \mathbf{y}=\lambda \mathbf{y}$$
+Il che conclude la dimostrazione poiché prova che  $\lambda$ è un autovalore anche della matrice $AA^\top      $
+\end{proof}
+
+\begin{corollary}\label{cor 1}
+\textbf{}\\
+\textit{Hp:} Sia $M \in \R^{n \times n}$ con autovalori $\mathbf{\lambda}=[\lambda_1, \dots, \lambda_n ]$\\
+\textit{Ts:} Gli autovalori di $M^\top      M \ \text{e} \ MM^\top      $ sono gli stessi e valgono $\mathbf{\lambda}^2=[\lambda_1^2, \dots, \lambda_n^2 ]$
+\end{corollary}
+\begin{proof}
+\textbf{Proposizione \ref{prop 2}} nel caso particolare $A=M$
 \end{proof}
 
 \begin{theorem}\label{teo spetr}
 \textbf{Teorema Spettrale}\\
 \textit{Hp:} Data $Q\in\mathbb{R}^{n\times n}$ una matrice simmetrica\\
-\textit{Ts:} È ortognalmente digonalizzabile $Q=U^{-1}DU=U^TDU$
+\textit{Ts:} È ortogonalmente diagonalizzabile $Q=U^{-1}DU=U^\top      DU$
 \end{theorem}
 \noindent
-Prendendo in cosiderazione le \textbf{Proposizioni \autoref{prop 1}}, \textbf{\autoref{prop 2}} ed il \textbf{Teorema \ref{teo spetr}} possiamo ossservare che data una qualsiasi matrice $A$ è possibile costruire a partire da essa due matrici simmetriche ortgonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
+Prendendo in considerazione le \textbf{Proposizioni \autoref{prop 1}}, \textbf{\autoref{prop 2}} ed il \textbf{Teorema \ref{teo spetr}} possiamo osservare che data una qualsiasi matrice $A$ è possibile costruire a partire da essa due matrici simmetriche ortogonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
 \begin{definition}
-	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinstra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^T=U^TD_lU$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
+	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinistra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^\top      =U^\top      D_lU$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
 \end{definition}
 \begin{definition}
-	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^TA=V^TD_rV$ e compongono la \textit{Matrice Singolare di destra} $V$.
+	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^\top      A=V^\top      D_rV$ e compongono la \textit{Matrice Singolare di destra} $V$.
 \end{definition}
 \begin{definition}
-	\textbf{Valori Singolari}\\ I valori singolari sono le radici quadrate degli autovalori non nulli di $A^TA$ e $A^TA$\\ $\sigma_1 \geq \dots \geq \sigma_{r=\min{n,m}} \geq 0$. Inchicheremo con $r$ il numero di valori singolari che nel caso di assenza di autovalori nulli sarà $r=\min{\{m,n\}}$.
+	\textbf{Valori Singolari}\\ I valori singolari sono le radici quadrate degli autovalori non nulli di $A^\top      A$ e $A^\top      A$\\ $\sigma_1 \geq \dots \geq \sigma_{r=\min{n,m}} \geq 0$. Indicheremo con $r$ il numero di valori singolari che nel caso di assenza di autovalori nulli sarà $r=\min{\{m,n\}}$.
 \end{definition}
 
-\section{Legame fra la decomposizione SVD ed il Teorema Spettrale}
-Da un punto di vista intuitivo la farrotizzazion SVD può essere considerata come la generalizzaizone del concetto di diagonalizzione di una matrice quadrata; infatti se la seconda può essere applicata solamente a matrici quadrate $(n \times n)$ risuulta valida per qualsiasi tipo di matrice $(m \times n)$ senza limite alcuno sulla sua forma.\\
-Se $A$ ammette la fattorizzazione SVD allora $A=U\Sigma V^T$ valgono le seguenti relazioni: $$A^TA=(U\Sigma V^T)^TU\Sigma V^T=V\Sigma^TU^TU\Sigma V^T=V\Sigma^T \Sigma V^T$$
-$$ AA^T=U\Sigma V^T(U\Sigma V^T)^T=\dots=U\Sigma \Sigma^T U^T$$ 
-Vale duque un risultato ancora più specifico della semplice dagonalizzazione di una matricre ovvero il Teorema Spettrale
+\subsection{Legame fra la decomposizione SVD ed il Teorema Spettrale}
+Da un punto di vista intuitivo la fattorizzazione SVD può essere considerata come la generalizzazione del concetto di diagonalizzazione di una matrice quadrata; infatti se la seconda può essere applicata solamente a matrici quadrate $(n \times n)$ risulta valida per qualsiasi tipo di matrice $(m \times n)$ senza limite alcuno sulla sua forma.\\
+Se $A$ ammette la fattorizzazione SVD allora $A=U\Sigma V^\top      $ valgono le seguenti relazioni: $$A^\top      A=(U\Sigma V^\top      )^\top      U\Sigma V^\top      =V\Sigma^\top      U^\top      U\Sigma V^\top      =V\Sigma^\top       \Sigma V^\top      $$
+$$ AA^\top      =U\Sigma V^\top      (U\Sigma V^\top      )^\top      =\dots=U\Sigma \Sigma^\top       U^\top      $$ 
+Vale dunque un risultato ancora più specifico della semplice diagonalizzazione di una matrice ovvero il Teorema Spettrale
 
-\section{Interpretazione geometrica}
+\subsection{Interpretazione geometrica}
 Data una matrice $A \in \R^{m \times n}$ consideriamo l'applicazione lineare ad essa associata $$A: \R^n \rightarrow \R^m$$
-La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche rappresentate dalle 3 matici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rapppresentano una rotazinone o una simmetria assiale mentre la matrice $\Sigma$ è una dilatazione di intestità $\sigma_i$ lungo la componente $\mathbf{x}_i$.Di seguito illustiamo visimaente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellise.
+La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche rappresentate dalle 3 matrici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rappresentano una rotazione o una simmetria assiale, in generale una isometria, mentre la matrice $\Sigma$ è una dilatazione di intensità $\sigma_i$ lungo la componente $\mathbf{x}_i$ .Di seguito illustriamo visivamente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellise.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.85\textwidth,height=5.35cm]{geo.png}
@@ -148,10 +166,10 @@ La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geo
     \label{fig:geo}
 \end{figure}
 \noindent \\
-Possiamo estendere questo ragionemento ad un caso più generale considerando una sfera di raggio unitario in $\R^n$ e l'ellissoide ad essa associata da $A \in \R^{m \times n}$ in $\R^m$.\\
+Possiamo estendere questo ragionamento ad un caso più generale considerando una sfera di raggio unitario in $\R^n$ e l'ellissoide ad essa associata da $A \in \R^{m \times n}$ in $\R^m$.\\
 \begin{figure}[h]
 \centering
-\begin{tikzpicture}[scale=1.7]
+\begin{tikzpicture}[scale=1.2]
     % Prima figura - Sfera
     \begin{scope}[shift={(0,0)}]
         % Assi cartesiani
@@ -198,15 +216,15 @@ Possiamo estendere questo ragionemento ad un caso più generale considerando una
     \draw[-latex, blue] (0,0,0) -- (-\xEndPoint,-\yEndPoint,-\zEndPoint)node[left] {$\mathbf{u_3}$};
     \end{scope}
 \end{tikzpicture}
-\caption{Mappa da una sfera in $\R^n$ ad un'ellisoide in $\R^m$.}
+\caption{Mappa da una sfera in $\R^n$ ad un'ellissoide in $\R^m$ nel caso particolare $n,m=3$.}
 \end{figure}
-\noindent
-Notiamo che le matrici $U$ e $V$ sono unitarie e le colonne di ciscuna formano una mase di vettori ortonormali. Inoltre la matrice $A$ mappa il $v_i$ elemento della base in nel vettore dilatao $\sigma_iu_i$.
 \newpage
+\noindent
+Notiamo che le matrici $U$ e $V$ sono unitarie e le colonne di ciascuna formano una base di vettori ortonormali. Inoltre la matrice $A$ mappa il $v_i$ elemento della base in nel vettore dilatato $\sigma_iu_i$.
 \noindent
 Verifichiamolo:
 \[
-A = U\Sigma V^T 
+A = U\Sigma V^\top       
 \]
 \[
 AV = U\Sigma
@@ -221,77 +239,152 @@ Tenendo conto che
 Otteniamo
 $$\forall i=1,\dots,n\ A\mathbf{v_i}=\sigma_i\mathbf{u_i}
 $$
-Possiamo quindi scivere più in generale che:  $A\mathbf{v}=\sigma\mathbf{u}$ e $A^T\mathbf{u}=\sigma\mathbf{v}$.\\
-Dal punto di vista degli spazi associati allo $Span$ delle colonne di ciascuna matrice se la matrice $A$ non ha rango massimo, $\text{Rg}(A)= r < \min{\{m,n\}}$, allora susssiste la seguente relazione:
-\begin{itemize}
-	\item Le prime $r$ colonne di U sono una base dello $\text{Span}(A)$;
-	\item Le ultime $m-r$ colonne di U sono una base del $\text{Ker}(A^T)$;
-	\item Le prime $r$ colonne di $V$ sono una base dello $\text{Span}(A^T)$;
-	\item Le ultime $n-r$ colonne di $V$ sonouna base del $\text{Ker}(A)$
-\end{itemize} 
-\textit{Osservazione:} $\text{Span}(A)=\text{Col}(A)$ e quindi $\text{Span}(A^T)=\text{Col}(A^T)=\text{Row}(A)$.\\
-La dimostrazione dell'elenco delle proprietà segue dalla \textbf{Proposizione \ref{prop gal}} unita al \textbf{Teorema \ref{teo spetr}} e alla definzione di decomposizione SVD.
-
+Possiamo quindi scrivere più in generale che:  $A\mathbf{v}=\sigma\mathbf{u}$ e $A^\top      \mathbf{u}=\sigma\mathbf{v}$.\\
+\\
+Studiamo ora le relazioni che sussistono fra gli spazi vettoriali associati alle colonne della matrice $A$ e delle matrici di decomposizione $U$ e $V$. Per farlo avremo bisogno di qualche risultato teorico pregresso.\\
+\textit{Osservazione:} $\text{Span}(A)=\text{Col}(A)$ e quindi $\text{Span}(A^\top      )=\text{Col}(A^\top      )=\text{Row}(A)$.
+\begin{proposition}
+\textbf{}\\
+\textit{Hp:} Per ogni matrice $A \in \R^{m \times n}$ valgono le seguenti relazioni\\
+\textit{Ts:} $ \text{Ker}(A)=\text{Row}(A)^\perp \quad \text{Row}(A)=\text{Ker}(A)^\perp \quad \text{e} \quad \text{Ker}(A^\top)=\text{Col}(A)^\perp \quad \text{Col}(A)=\text{Ker}(A^\top)^\perp $ 
+\end{proposition}
 \begin{theorem}\label{null}
 \textbf{Teorema di Nullità più rango}\\
 \textit{Hp:} Sia $A\in \R^{m \times n}$ con Rg($A$)=$r$\\
 \textit{Ts:} dim Ker($A$)=$n-r$
 \end{theorem}
+\noindent
 \begin{proposition}\label{prop gal}
 \textbf{}\\
-\textit{Hp:} $\forall A \in \R^{m \times n}$ valogno le seguenti uguaglianze\\
-\textit{Ts:} $\text{Ker}(A)=\text{Ker}(A^TA),\ \text{Col}(A^T)=\text{Col}(A^TA)$ e di conseguenza $\text{Rg}(A)=\text{Rg}(A^TA)$
+\textit{Hp:} $\forall A \in \R^{m \times n}$ valgono le seguenti uguaglianze\\
+\textit{Ts:} $\text{Ker}(A)=\text{Ker}(A^\top      A),\ \text{Col}(A^\top      )=\text{Col}(A^\top      A)$ e di conseguenza $\text{Rg}(A)=\text{Rg}(A^\top      A)$
 \end{proposition}
 \begin{proof}
 Osserviamo che
-$$\|A\mathbf{x}\|^2=(A\mathbf{x})^T(A\mathbf{x})=\mathbf{x}^TA^TA\mathbf{x}$$
-Ne segue che, se $\mathbf{x}$ appartiene al Nucleo di $A^TA$ allora $\|A\mathbf{x}\|^2=0$ e quindi $A\mathbf{x}=0$, cioè $\mathbf{x} \in \text{Ker}(A)$. Viceversa se $ \mathbf{x} \in \text{Ker}(A)$ ripercorrendo la catena di uguaglianze a retroso $\mathbf{x} \in \text{Ker}(A^TA)$ e per arbitrarietà della scelta del vettore i due nuclei sono uguali. Dall'ugualianza dei nuclei pèr il \textbf{Teorema \ref{null}} segue l'uquaglianza dei ranghi. \\
-Col($A^T$)=Row($A$) è il complemento ortogonale di Ker($A$). Ma $\text{Ker}(A)=\text{Ker}(A^TA)$ il cui complemento ortogonale è Row($A^TA$). Quindi Col($A^T$) = Row($A^TA$) ma per simmetria di $A^TA$ Row($A^TA$)=Col($A^TA$) $\Rightarrow$ Col($A$)=Col($A^TA$). 
+$$\|A\mathbf{x}\|^2=(A\mathbf{x})^\top      (A\mathbf{x})=\mathbf{x}^\top      A^\top      A\mathbf{x}$$
+Ne segue che, se $\mathbf{x}$ appartiene al Nucleo di $A^\top      A$ allora $\|A\mathbf{x}\|^2=0$ e quindi $A\mathbf{x}=0$, cioè $\mathbf{x} \in \text{Ker}(A)$. Viceversa se $ \mathbf{x} \in \text{Ker}(A)$ ripercorrendo la catena di uguaglianze a retroso $\mathbf{x} \in \text{Ker}(A^\top      A)$ e per arbitrarietà della scelta del vettore i due nuclei sono uguali. Dall'uguaglianza dei nuclei per il \textbf{Teorema \ref{null}} segue l' uguaglianza dei ranghi. \\
+Col($A^\top      $)=Row($A$) e $(\text{Row}(A))^\perp = \text{Ker}(A)$. Ma $\text{Ker}(A)=\text{Ker}(A^\top      A)$ il cui complemento ortogonale è Row($A^\top      A$). Quindi Col($A^\top      $) = Row($A^\top      A$) ma per simmetria di $A^\top      A$ 
+\[
+\text{Row}(A^\top      A)=\text{Col}(A^\top      A) \Rightarrow \text{Col}(A)=\text{Col}(A^\top      A)
+\] 
+\end{proof}
+\begin{corollary}\label{cor:A}
+\[
+\text{Ker}(A^\top      ) = \text{Ker}(AA^\top      ), \quad \text{Col}(A) = \text{Col}(AA^\top      ), \quad \text{Rg}(A^\top      ) = \text{Rg}(AA^\top      ).
+\]
+\end{corollary}
+\noindent
+Se quindi la matrice $A$ non ha rango massimo, $\text{Rg}(A)= r < \min{\{m,n\}}$, allora sussiste la seguente relazione:
+\begin{proposition}\label{prop: span}
+\textbf{}\\
+\textit{Hp:}Data una matrice $A \in \R^{m \times n}$ e la sua fattorizzazione SVD $A=U\Sigma V^\top      $\\
+\textit{Ts:} Valgono le seguenti relazioni:
+\begin{enumerate}
+	\item Le prime $r$ colonne di U sono una base dello $\text{Span}(A)$;
+	\item Le ultime $m-r$ colonne di U sono una base del $\text{Ker}(A^\top      )$;
+	\item Le prime $r$ colonne di $V$ sono una base dello $\text{Span}(A^\top      )$;
+	\item Le ultime $n-r$ colonne di $V$ sono una base del $\text{Ker}(A)$
+\end{enumerate} 
+\end{proposition}
+
+\begin{proof}{1. e 2.}
+\[
+\text{Col}(A)=\text{Col}(AA^\top      )
+\]
+\[
+\text{Col}(U\Sigma V^\top      )=\text{Col}((U\Sigma V^\top      )(U\Sigma V^\top      )^\top      )=\text{Col}(U\Sigma V^\top      V\Sigma^\top U^\top)=\text{Col}(U\Sigma \Sigma^\top U^\top)
+\]
+Sapendo che $ \Sigma \in \R^{m \times n} \ \text{e} \ \text{Rg}(\Sigma)=r$
+\[
+\Sigma \Sigma^\top       = \begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r \\
+0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0
+\end{bmatrix}
+\begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r & 0 & \cdots & 0
+\end{bmatrix}
+=
+\begin{bmatrix}
+\sigma_1^2 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+0 & \sigma_2^2 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r^2 & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & 0 & \cdots & 0
+\end{bmatrix}
+\]
+quando svolgiamo il prodotto fra $U$ $\Sigma \Sigma^\top $ e $U^\top$ otteniamo \[
+[\mathbf{u}_1 \sigma_1^2 \, \dots \, \mathbf{u}_r \sigma_r^2 \, 0 \, \dots \, 0]
+\]
+da cui la tesi $\text{Col}(A)=\text{Span}([\mathbf{u}_1 \, \dots \, \mathbf{u}_r])$
+$$\text{Ker}(A^\top      )=\text{Ker}(AA^\top      )$$ 
+\[
+\text{Ker}(V\Sigma^\top      U^\top      )=\text{Ker}((U\Sigma V^\top      )(U \Sigma V^\top      )^\top      )=\text{Ker}(U\Sigma \Sigma^\top       U)
+\]
+e quindi $\text{Ker}(A^\top      )=\text{Span}([\mathbf{u}_{m-r} \, \dots \, \mathbf{u}_m])$
 \end{proof}
 
-\section{Dimostrazione della decomposizione SVD e Teorema Eckart-Young}
+\begin{proof}{3. e 4.}
+Analogamente a 1. e 2. sfruttando le proprietà della trasposizione del prodotto matriciale
+\end{proof}
 
-\subsection{Dimostrazione}
-Data una matrice $A \in \R^{m \times n}$ poichè $A^TA \in \R^{n \times n}$ è simmetrica e semidefinita positiva segue dal Teorema Spettrale che $\exists$ una matrice ortonormale $V \in \R^{n \times n}$ tale che $$ A^TA=V\bar{D}V^T$$ e a sua volta poichè $V^{-1}=V^T$ $$V^TA^TAV=\bar{D}= \begin{bmatrix}D & 0 \\ 0 & 0\end{bmatrix}$$
-dove $D \in \R^{\ell \times \ell}$ è una matrice diagonale e positiva di dimensione con $\ell \leq \min{\{m,n\}}$ il numero di autovalori non nulli della matrice $A^TA$. 
-Osserviamo che per definizione di autovalori e autovettori la $i-esima$ colonna di $V$ corrisponde all' $i-esimo$ autovalore $\bar{D}_{ii}$. Di consguenza possiamo indivuare $V_1=[\mathbf{v}_1 \, \dots \, \mathbf{v}_{\ell}] \in \R^{n \times \ell}$ e $V_2=[\mathbf{v}_{\ell+1} \, \dots \, \mathbf{v}_n] \in \R^{n \times n-\ell}$ tali che $V=[V_1 \, V_2]$ che sono rispettivamente gli autovettori associati ad autovalori non nulli e nulli. 
+\subsection{Dimostrazione della decomposizione SVD e Teorema Eckart-Young}
+\begin{theorem}\label{svd}
+\textbf{Decomposizione a valori singolari}\\
+\textit{Hp:} Sia $A \in \R^{m \times n}$ e $\text{Rg}(A)=r$. Allora esistono una matrice pseudodiagonale $\Sigma \in \R^{m \times n}$ con $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ e $U$ e $V$ due matrici ortogonali.\\
+\textit{Ts:} Possiamo riscrivere la matrice $A$ come $A=U\Sigma V^\top$. Tale decomposizione di dice decomposizione ai valori singolari di $A$, non è unica, ma in ogni decomposizione siffatta gli elementi non nulli $\sigma_k$ di $\Sigma$ sono i valori singolari di $A$. 
+\end{theorem}
+\subsubsection{Dimostrazione}
+Data una matrice $A \in \R^{m \times n}$ poiché $A^\top      A \in \R^{n \times n}$ è simmetrica e semidefinita positiva segue dal Teorema Spettrale che $\exists$ una matrice ortonormale $V \in \R^{n \times n}$ tale che $$ A^\top      A=V\bar{D}V^\top      $$ e a sua volta poiché $V^{-1}=V^\top      $ $$V^\top      A^\top      AV=\bar{D}= \begin{bmatrix}D & 0 \\ 0 & 0\end{bmatrix}$$
+dove $D \in \R^{\ell \times \ell}$ è una matrice diagonale e positiva di dimensione con $\ell \leq \min{\{m,n\}}$ il numero di autovalori non nulli della matrice $A^\top      A$. 
+Osserviamo che per definizione di autovalori e autovettori la $i-esima$ colonna di $V$ corrisponde all' $i-esimo$ autovalore $\bar{D}_{ii}$. Di conseguenza possiamo individuare $V_1=[\mathbf{v}_1 \, \dots \, \mathbf{v}_{\ell}] \in \R^{n \times \ell}$ e $V_2=[\mathbf{v}_{\ell+1} \, \dots \, \mathbf{v}_n] \in \R^{n \times n-\ell}$ tali che $V=[V_1 \, V_2]$ che sono rispettivamente gli autovettori associati ad autovalori non nulli e nulli. 
 Possiamo quindi riscrivere l'equazione come:
-$$ \begin{bmatrix} V_1^T \\ V_2^T \end{bmatrix}
-A^TA \begin{bmatrix} V_1 & \!\! V_2 \end{bmatrix}
-= \begin{bmatrix}  V_1^TA^TAV_1 & V_1^TA^TAV_2 \\
-  V_2^TA^TAV_1 & V_2^TA^TAV_2
+$$ \begin{bmatrix} V_1^\top       \\ V_2^\top       \end{bmatrix}
+A^\top      A \begin{bmatrix} V_1 & \!\! V_2 \end{bmatrix}
+= \begin{bmatrix}  V_1^\top      A^\top      AV_1 & V_1^\top      A^\top      AV_2 \\
+  V_2^\top      A^\top      AV_1 & V_2^\top      A^\top      AV_2
 \end{bmatrix} = \begin{bmatrix} D & 0 \\ 0 & 0 \end{bmatrix}$$
 Da cui ricaviamo le seguenti equazioni:
-$$V_1^TA^TAV_1=D \ \ \text{e} \ \ V_2^TA^TAV_2=0$$ 
+$$V_1^\top      A^\top      AV_1=D \ \ \text{e} \ \ V_2^\top      A^\top      AV_2=0$$ 
 Siamo quindi in grado di risolvere la seconda
 $$\|AV_2\|_2=0 \Rightarrow AV_2=0$$ 
 Costruiamo inolte le seguenti matrici di diverse dimensioni che torneranno utili in seguito:\\
 \begin{itemize}
-	\item$V_1^TV_1=I_{\ell}$ dove $(\ell \times n)\times(n \times \ell)=(\ell \times \ell)$
-	\item$V_2^TV_2=I_{n-\ell}$ dove $(n-\ell \ \times n)\times(n \times \ n-\ell)=(n-\ell \times n-\ell)$
-	\item$[V_1 V_2][V_1 V_2]^T=V_1V_1^T+V_2V_2^T=I_n$ dove\\
+	\item$V_1^\top      V_1=I_{\ell}$ dove $(\ell \times n)\times(n \times \ell)=(\ell \times \ell)$
+	\item$V_2^\top      V_2=I_{n-\ell}$ dove $(n-\ell \ \times n)\times(n \times \ n-\ell)=(n-\ell \times n-\ell)$
+	\item$[V_1 V_2][V_1 V_2]^\top      =V_1V_1^\top      +V_2V_2^\top      =I_n$ dove\\
  	$$(n \times \ell)\times(\ell \times n)=(n \times n) \ \text{e} \ (n \times n-\ell)\times(n-\ell \times  n)=(n \times n)$$
 \end{itemize}
 Definiamo ora la matrice $U_1$ come: $$U_1 = A V_1 D^{-\frac{1}{2}} \in \R^{m \times \ell}\ \lbrace(m \times \ell)=(m \times n)\times(n \times \ell)\times(\ell \times \ell)\rbrace$$ sapendo che $D^{-\frac{1}{2}}$ è ben definita poiché $D_{ii} > 0$ $\forall \ i = 1, \dots, \ell$.\\
-Invertendo la relazione e sostuendo $U_1$: $$A=U_1D^{\frac{1}{2}}V_1^T=AV_1D^{-\frac12}D^{\frac12}V_1^T=AV_1V_1^T$$ e sfruttando $V_1V_1^T+V_2V_2^T=I_n$ e $AV_2=0$  otteniamo: $$A=A\left( I -V_2V_2^T \right)=A-AV_2V_2^T=A-0=A$$ il che sabilisce la veridicità dalla definizione di $U_1$ proposta.\\
-Abbiamo quindi quasi dimostrato il risltato completo, non ci resta che verificare che le colonne della matrice $U_1$ formino una base ortonormale: $$ U_1^TU_1=D^{-\frac12}V_1^TA^TAV_1D^{-\frac12}=D^{-\frac12}DD^{-\frac12}=I_{\ell} \in \R^{\ell \times \ell} $$
-Possiamo quindi costruire il complemento orgonale di $U_1$ ovvero $U_2=\text{Span}(\text{Col}(U_1)^\perp) \in \R^{m \times n-\ell}$ in modo che $U=[U_1 \ U_2] \in \R^{m \times m}$ sia una matrice ortogonale.\\
+Invertendo la relazione e sostituendo $U_1$: $$A=U_1D^{\frac{1}{2}}V_1^\top      =AV_1D^{-\frac12}D^{\frac12}V_1^\top      =AV_1V_1^\top      $$ e sfruttando $V_1V_1^\top      +V_2V_2^\top      =I_n$ e $AV_2=0$  otteniamo: $$A=A\left( I -V_2V_2^\top       \right)=A-AV_2V_2^\top      =A-0=A$$ il che stabilisce la coerenza dalla definizione di $U_1$ proposta.\\
+Abbiamo quindi quasi dimostrato il risultato completo, non ci resta che verificare che le colonne della matrice $U_1$ formino una base ortonormale: $$ U_1^\top      U_1=D^{-\frac12}V_1^\top      A^\top      AV_1D^{-\frac12}=D^{-\frac12}DD^{-\frac12}=I_{\ell} \in \R^{\ell \times \ell} $$
+Possiamo quindi costruire il complemento ortogonale di $U_1$ ovvero $U_2=\text{Span}(\text{Col}(U_1)^\perp) \in \R^{m \times n-\ell}$ in modo che $U=[U_1 \ U_2] \in \R^{m \times m}$ sia una matrice ortogonale.\\
 Per concludere aggiungiamo un numero opportune di righe e colonne nulle alla matrice $D^{\frac12} \in \R^{\ell \times \ell}$ in modo da creare: $$\Sigma=\begin{bmatrix}
   \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
   0
 \end{bmatrix} \in \R^{m \times n}$$
 Allora sfruttando le proprietà del prodotto matriciale fra matrici a blocchi: 
-$$U\Sigma V^T= [U_1 \ U_2]\begin{bmatrix}
+$$U\Sigma V^\top      = [U_1 \ U_2]\begin{bmatrix}
   \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
   0
-\end{bmatrix}[V_1 \ V_2]^T= \begin{bmatrix} U_1 & U_2 \end{bmatrix}
-\begin{bmatrix} D^\frac{1}{2}V_1^T \\ 0 \end{bmatrix}
-= U_1 D^\frac{1}{2} V_1^T = A $$\qed
+\end{bmatrix}[V_1 \ V_2]^\top      = \begin{bmatrix} U_1 & U_2 \end{bmatrix}
+\begin{bmatrix} D^\frac{1}{2}V_1^\top       \\ 0 \end{bmatrix}
+= U_1 D^\frac{1}{2} V_1^\top       = A $$\qed
 
-\subsection{Norme Matriciali}
-Dal momento che $\R^{m \times n}$ è isomorgf a $\R^{mn}$ la norma di una matrice è equivalente alla norma di un vettore. 
+\subsubsection{Norme Matriciali}
+Introduciamo ora alcune nozioni sulle norme matriciali che adopereremo per discutere alcuni risultati di approssimazione.
+Dal momento che $\R^{m \times n}$ è isomorfo a $\R^{mn}$ la norma di una matrice è equivalente alla norma di un vettore. 
 \begin{definition}
-	\textbf{Norma}\\ Una funzione f: $\R^{m \times n} \rightarrow \R$ è detta norma se sooddisfa le seguenti proprietà
+	\textbf{Norma}\\ Una funzione f: $\R^{m \times n} \rightarrow \R$ è detta norma se soddisfa le seguenti proprietà
 	\begin{itemize}
 		\item $f(A) \geq 0 \ \forall A\in \R^{m \times n} \ \text{e} \  f(A)=0 \iff A=0 $
 		\item $f(A+B)\leq f(A)+f(B)\  \, \forall A,B \in \R^{m \times n}$ 
@@ -319,19 +412,19 @@ $$\|A\|_\infty = \max_{1 \leq i \leq m} \sum_{j=1}^{n} |a_{ij}|$$
 \textit{Hp:} Data una matrice ortogonale $Q \in \R^{n \times n}$\\
 \textit{Ts:$\forall \mathbf{x}\in \R^n \ \|Q\mathbf{x}\|=\|\mathbf{x}\|$} 
 \end{proposition}
-\begin{proof} $\|Q\mathbf{x}\|^2 = (Q \mathbf{x})^T(Q \mathbf{x}) = \mathbf{x}^T Q^T Q \mathbf{x} = \mathbf{x}^TI\mathbf{x} = \mathbf{x}^T\mathbf{x} = \|\mathbf{x}\|^2$
+\begin{proof} $\|Q\mathbf{x}\|^2 = (Q \mathbf{x})^\top      (Q \mathbf{x}) = \mathbf{x}^\top       Q^\top       Q \mathbf{x} = \mathbf{x}^\top      I\mathbf{x} = \mathbf{x}^\top      \mathbf{x} = \|\mathbf{x}\|^2$
 \end{proof}
 \noindent
 Enunciamo ora una serie di corollari che seguono dalla dimostrazione della fattorizzazione SVD.
-\begin{corollary}
+\begin{corollary}\label{cor 3}
 \textbf{}\\
-\textit{Hp:} Sia $U^TAV=\Sigma$ la decomposizione SVD della matrice $A\in \R^{m \times n}$ con $m \geq n$. \\
-\textit{Ts:} $\forall i=1, \dots ,n \ A \mathbf{v}_i= \sigma_i \mathbf{u}_i \text{e} A^T \mathbf{u}_i = \sigma_i \mathbf{v}_i$  
+\textit{Hp:} Sia $U^\top      AV=\Sigma$ la decomposizione SVD della matrice $A\in \R^{m \times n}$ con $m \geq n$. \\
+\textit{Ts:} $\forall i=1, \dots ,n \ A \mathbf{v}_i= \sigma_i \mathbf{u}_i \text{e} A^\top       \mathbf{u}_i = \sigma_i \mathbf{v}_i$  
 \end{corollary}
 \begin{proof}
-Come abbiamo già discusso precedentemente nell'intepretazione geometrica:
+Come abbiamo già discusso precedentemente nell'interpretazione geometrica:
 \[
-A = U\Sigma V^T 
+A = U\Sigma V^\top       
 \]
 \[
 AV = U\Sigma
@@ -346,17 +439,17 @@ Tenendo conto che
 Otteniamo
 $$\forall i=1,\dots,n\ A\mathbf{v_i}=\sigma_i\mathbf{u_i}
 $$
-Analogamente si dimostra il risultato per $A^T \mathbf{u}_i = \sigma_i \mathbf{v}_i$
+Analogamente si dimostra il risultato per $A^\top       \mathbf{u}_i = \sigma_i \mathbf{v}_i$
 \end{proof}
 
-\begin{corollary}
+\begin{corollary}\label{cor 4}
 \textbf{}\\
 \textit{Hp:} Sia $A\in \R^{m \times n}$ con $m \geq n$ \\
 \textit{Ts:} $\|A\|_2=\sigma_1 \text{e} \  \|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$
 \end{corollary}
 \begin{proof}
-1) \[ \|A\|_2 = \max_{\|\mathbf{x}\|_2 =1} \|A\mathbf{x}\|_2 = \max_{\|\mathbf{x}\|_2 =1} \| U \Sigma V^T \mathbf{x} \|_2 \]
-Dalla \textbf{Proposizione \ref{cons norm}} sappiamo che le due matrici ortognoali $U$ e $V$ non modificano la norma. Possiamo quindi riscrivere l'uguaglianza come $$\max_{\|\mathbf{x}\|_2 =1} \|\Sigma \mathbf{x}\|_2 $$ cioè $$\max_{\|\mathbf{x}\|_2 =1} \begin{bmatrix}
+1) \[ \|A\|_2 = \max_{\|\mathbf{x}\|_2 =1} \|A\mathbf{x}\|_2 = \max_{\|\mathbf{x}\|_2 =1} \| U \Sigma V^\top       \mathbf{x} \|_2 \]
+Dalla \textbf{Proposizione \ref{cons norm}} sappiamo che le due matrici ortogonali $U$ e $V$ non modificano la norma. Possiamo quindi riscrivere l'uguaglianza come $$\max_{\|\mathbf{x}\|_2 =1} \|\Sigma \mathbf{x}\|_2 $$ cioè $$\max_{\|\mathbf{x}\|_2 =1} \begin{bmatrix}
 \sigma_1 & 0 & \cdots & 0 \\
 0 & \sigma_2 & \cdots & 0 \\
 \vdots & \vdots & \ddots & \vdots \\
@@ -370,54 +463,349 @@ x_2 \\
 \vdots \\
 x_n
 \end{bmatrix}$$ 
-e poichè $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ otteniamo il massimo per $\mathbf{x}=[1 \ 0 \dots 0]^T$ ovvero $\|A\|_2= \sigma_1$
-\\2)$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|(U\Sigma V^T)_{ij}|^2}$$
-scrivendo il prodotto matriciale elemento per elemento otteniamo che $$(U\Sigma V^T)_{ij} = \sum_{k=1}^{r} U_{ik} \Sigma_{kk} (V^T)_{kj}=\sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}$$
+e poiché $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ otteniamo il massimo per $\mathbf{x}=[1 \ 0 \dots 0]^\top      $ ovvero $\|A\|_2= \sigma_1$
+\\2)$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|(U\Sigma V^\top      )_{ij}|^2}$$
+scrivendo il prodotto matriciale elemento per elemento otteniamo che $$(U\Sigma V^\top      )_{ij} = \sum_{k=1}^{r} U_{ik} \Sigma_{kk} (V^\top      )_{kj}=\sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}$$
 $$ \|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n \sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}} $$ 
 Tuttavia per costruzione della matrice $\Sigma$ $$\Sigma_{kk}=\sigma_k \geq 0 \ \forall k=1,\dots,r \ \text{con} \ r\leq n=\min{\{m,n\}} \ \text{e} \ \Sigma_{ij}=0 \ \forall i=1, \dots, m \ \text{e} \ \forall j=1, \dots, n$$
 Otteniamo la tesi $$\|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$$
 
 \end{proof}
-
-\begin{corollary}
-\textbf{}\\
-\textit{Hp:}\\
-\textit{Ts:} 
+\textcolor{orange}{
+\begin{corollary}\label{cor 5}
+\textbf{ DIMOSTRAZIONE DA CONTROLLARE }\\
+\textit{Hp:} Sia $A,E \ \in \R^{m \times n}$\\
+\textit{Ts:} $\sigma_{max}(A+E) \leq \sigma_{max}(A) + \|E\|_2 \ \text{e} \ \sigma_{min}(A+E) \geq \sigma_{min}(A) - \|E\|_2$ 
 \end{corollary}
 \begin{proof}
+Dal \textbf{Corollario \ref{cor 3}}  segue che $$\sigma_{min}(A)\|\mathbf{x}\|_2 \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)\|\mathbf{x}\|_2$$
+e scegliendo un vettore $\mathbf{x}=1$ otteniamo che
+\[
+\sigma_{min}(A) \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)
+\]
+Applicando questo risultato al nostro caso e la definizione di norma otteniamo
+$$ \sigma_{min}(A) - \|E\|_2 \leq \|A\|_2 - \|E\|_2 \leq \|A+E\|_2 \leq \|A\|_2 + \|E\|_2 = \sigma_{max}(A) + \|E\|_2  $$
+da cui la tesi. 
 \end{proof}
-
-\begin{corollary}
+}\textcolor{orange}{
+\begin{corollary}\label{cor 6}
 \textbf{}\\
-\textit{Hp:}\\
-\textit{Ts:} 
+\textit{Hp:} Sia $A \in \R^{m \times n} \ \text{e} \ \mathbf{z}\in \R^m$\\
+\textit{Ts:} $\sigma_{max}([A \, z]) \geq \sigma_{max}(A)$ e $\sigma_{min}([A \, z]) \leq \sigma_{min}(A)$
 \end{corollary}
 \begin{proof}
+Sia $A=U\Sigma V^\top      $ la decomposizione SVD di $A$ e consideriamo il vettore $\mathbf{x}= \mathbf{v}_1$, ottenuto dalla prima colonna della matrice $V$, e la matrice $\bar{A} = [A \, \mathbf{z}] \in \R^{m \times n+1}$. Sfruttando il \textbf{Corollario \ref{cor 5}} otteniamo
+\[
+\sigma_{max}(A)=\| A \mathbf{x} \|_2=\|\bar{A} \mathbf{\begin{bmatrix} x \\0 \end{bmatrix}}  \|_2 \leq \sigma_{max}(\bar{A})
+\]
+Analogmaente si dimostra che $\sigma_{min}(A) \geq \sigma_{min}(\bar{A}) $
 \end{proof}
+}
+\noindent
+\textit{Osservazione:} Ricordiamo che possiamo la decomposizione SVD come $$A = \sum_{i=1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top       $$
 
-\begin{theorem}
+\subsubsection{Teorema di Eckart-Young}
+\begin{theorem}\label{EY}
 \textbf{Teorema di Eckart-Young}\\
-\textit{Hp:} Sia $A$ una matrice $m \times n$ di rango $r$, e sia $k \in \mathbb{N} \ \text{tale che} \ 1 \leq k \leq r$.\\
-\textit{Ts:} $\forall$ matrice $B$ di rango $k$, la soluzione del problema di minimo quadrato:
+\textit{Hp:} Sia $A \in \R^{m \times n}$ di rango $r$ e sia $k \in \mathbb{N} \ \text{tale che} \ 1 \leq k \leq r$ tale che $$A_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top      $$ è la matrice ottenuta troncando la sommatoria che definisce la decomposizione a valori singolari\\
+\textit{Ts:} La matrice $A_k$ è soluzione ottima il seguente problema di minimizzazione fra tutte le matrici di rango $k$
 \[
-\min_{\text{rank}(X) = k} \|A - X\|_F^2
+\min_{\text{Rg}(B) = k} \|A - B\|_2 = \|A - A_k\|_2
 \]
-è data dalla matrice $X$ data dalla decomposizione ai valori singolari troncata di $A$, ovvero:
-\[
-X = \sum_{i=1}^k \sigma_i u_i v_i^T
-\]
-dove $\sigma_1 \geq \sigma_2 \geq \ldots \geq \sigma_r > 0$ sono i valori singolari di $A$, e $u_i$ e $v_i$ sono rispettivamente la $i$-esima colonna di $U$ e la $i$-esima colonna di $V$ nella decomposizione ai valori singolari di $A$, ovvero $A = U \Sigma V^T$, con $U$ una matrice $m \times r$, $V$ una matrice $n \times r$, e $\Sigma$ una matrice diagonale $r \times r$ contenente i valori singolari di $A$ sulla diagonale.
-
 \end{theorem}
-
+\begin{proof}
+Notiamo che $A_k = U \Sigma_k V^\top      $, possiamo quindi scrivere che 
+\[ A - A_k = U \Sigma V^\top       - U \Sigma_k V^\top       = U (\Sigma - \Sigma_k) V^\top       \]
+Invertendo la relazione
+\[ U^\top      (A-A_k)V = \begin{bmatrix}
+0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \ddots & & & \vdots \\
+0 & \cdots & \sigma_{k+1} & 0 & 0 \\
+\vdots & & & \ddots & \vdots \\
+0 & \cdots & 0 & \cdots & \sigma_{r} \\
+0 & \cdots & 0 & \cdots & 0 \\
+\vdots &  & \ddots & & \vdots \\
+0 & \cdots & 0 & \cdots & 0
+\end{bmatrix} \]
+e per unitarietà della norma delle matrici $U \ \text{e} \ V$ $\Rightarrow \|A-A_k\|_2=\sigma_{k+1}$.\\
+Perciò, dobbiamo mostrare che  $\forall \ B_k \in \R^{m \times n}$ tale che $\text{Rg}(B_k)=k$ 
+$$
+\|A-A_k\|_2 = \sigma_{k+1} \leq \|A-B_k\|_2.
+$$
+Poiché $\text{Rg}(B)=k$ 
+\[
+\text{Col}(B) = \text{Span}(\mathbf{[b_1 \, \dots \, b_k]}) \quad \text{e} \quad \text{Ker}(B) =\text{Row}(B)^\perp = \text{Span}(\mathbf{[x_{1} \, \dots \, x_{n-k}]}),
+\] 
+Per la \textbf{Proposizione \ref{prop: span}.4} e per il \textbf{Teorema \ref{null}}
+\[
+\text{Span}(\mathbf{[v_1 \, \dots v_{k+1}]}) \cap \text{Span}(\mathbf{[x_{1} \, \dots \, x_{n-k}]}) \neq 0
+\]
+allora deve esistere una combinazione lineare non banale delle prime $k+1$ colonne di $V$, cioè,
+\[
+\mathbf{w = \gamma_1v_1 + \cdots + \gamma_{k+1}v_{k+1}},
+\]
+tale che $Bw = 0$. Senza perdita di generalità, possiamo normalizzare $w$ in modo che $\|w\|_2 = 1$ o (equivalentemente) $\gamma_1^2 + \cdots + \gamma_{k+1}^2 = 1$. Pertanto,
+\[
+\|A-B_k\|_2^2 \geq \|(A-B_k)w\|_2^2 = \|Aw\|_2^2 = \gamma_1^2\sigma_1^2 + \cdots + \gamma_{k+1}^2\sigma_{k+1}^2 \geq \sigma_{k+1}^2.
+\]
+Il risultato segue prendendo la radice quadrata di entrambi i lati della disuguaglianza sopra.
+\end{proof}
+\begin{definition}
+\textbf{SVD ridotta}\\
+Sia $A$ una matrice $m \times n$ con rango $r$. La decomposizione ai valori singolari (SVD) ridotta di $A$ è data da $A = U' \Sigma' V'^\top$ dove:
+\[
+U' = 
+\begin{bmatrix}
+    | & | & & | \\
+    \mathbf{u}_1 & \mathbf{u}_2 & \cdots & \mathbf{u}_r \\
+    | & | & & |
+\end{bmatrix} \in \R^{m \times r}, \ 
+\Sigma' = 
+\begin{bmatrix}
+    \sigma_1 & 0 & \cdots & 0 \\
+    0 & \sigma_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & \sigma_r
+\end{bmatrix} \in \R^{r \times r} \ \text{e} \
+V'^\top       = 
+\begin{bmatrix}
+    - & \mathbf{v}_1^\top       & - \\
+    - & \mathbf{v}_2^\top       & - \\
+    & \vdots & \\
+    - & \mathbf{v}_r^\top       & - \\
+\end{bmatrix} \in \R^{r \times n}
+\]
+\end{definition}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1 \textwidth,height=5cm]{svd_econ.png}
+    \caption{Fattorizzazione SVD Ridotta.}
+    \label{fig:svd_econ}
+\end{figure}
 \newpage
+\subsection{Applicazioni Teoriche}
+\subsubsection{Pseudoinversa di una Matrice}
+\begin{definition}\label{psuedo}
+\textbf{Matrice Pseudoinversa o inversa di Moore-Penrose}\\
+Sia $A \in \R^{m \times n} \ \exists \ A^+ \in \R^{n \times m}$ detta matrice pseudoinversa di $A$ tale che
+\begin{itemize}
+	\item $A^+A\mathbf{x}^+=\mathbf{x}^+$ per ogni $\mathbf{x}^+ \in \text{Row}(A)$
+	\item $A^+\mathbf{y}_0=0$ per ogni $\mathbf{y}_0 \in \text{Col}(A)^\perp $
+\end{itemize}  
+Valgono le seguenti uguaglianze:
+$$ \text{Row}(A^+)=\text{Col}(A) \quad \text{Col}(A^+)=\text{Row}(A) \quad \text{Ker}(A^+)=\text{Col}(A)^\perp$$
+La matrice $A$ è la matrice pseudoinversa di $A^+$: $A=(A^+)^+$. In particolare
+\begin{itemize}
+	\item $AA^+\mathbf{v}=\mathbf{v}$ per ogni $\mathbf{v} \in \text{Col}(A)$
+\end{itemize}
+\end{definition}
+\noindent
+\textit{Osservazione:} Se si considera la generica applicazione lineare $\mathscr{L}: \mathbf{W_1} \rightarrow \mathbf{W_2}$ tra due spazi euclidei di dimensione finita, senza considerare la scelta di una base, si definisce l'applicazione pseudoinversa come l'unica applicazione lineare $\mathscr{L}^+: \mathbf{W_2} \rightarrow \mathbf{W_1}$ con le proprietà che $\mathscr{L}^+ \circ \mathscr{L} (x^+) = x^+$ per ogni $x^+ \in \text{Ker}(\mathscr{L})^\perp$ e $\mathscr{L}^+(y_0)=0$ per ogni $y_0 \in \text{Im}(\mathscr{L})^\perp$. Se $A$ è la matrice che rappresenta $\mathscr{L}$ rispetto a due basi ortonormali di $\mathbf{W_1}$ e $\mathbf{W_2}$, allora $A^+$ rappresenta $\mathscr{L}^+$ rispetto a tali basi.
+
+\begin{proposition}
+\textbf{Fattorizzazione SVD e matrice pseudoinversa}\\
+\textit{Hp:} Sia $A \in \R{m \times n}$ e $A=U\Sigma V^T$ la sua decomposizione a valori singolari\\
+\textit{Ts:} La matrice pseudoinversa di $A$ è $A^+=V\Sigma^+U^T \ \in \R^{m \times n}$ dove i valori singolari di $A^+$ sono i reciproci dei valori singolari di $A$ 
+\end{proposition}
+\begin{proof}
+Vogliamo verificare l'espressione proposta soddisfa tutte le caratteristiche della \textbf{Definizione \ref{psuedo}}.\\
+Poniamo $C=V\Sigma^+U^T$. Dobbiamo dimostrare che $CA\mathbf{x}^+=\mathbf{x}^+$ per ogni $\mathbf{x}^+ \in \text{Row}(A)$ e che $C\mathbf{y}_0=0$ per ogni $\mathbf{y}_0 \perp \text{Col}(A)$.\\
+Dall'uguaglianza $A^\top = V\Sigma^\top U^\top$ segue che ogni vettore $\mathbf{x}^+ \in \text{Row}(A)=\text{Col}(A^\top)$ è della forma $\mathbf{x}^+ = V X^+$ per un unico $X^\top \in \text{Row}(\Sigma)=\text{Col}(\Sigma^\top)$. Quindi\\
+$$CA=\mathbf{x}^+ = CAVX^+ = V \Sigma^+ U^\top U \Sigma V^\top \mathbf{x}^+ = V \Sigma^+ \Sigma X^+ = V X^+ = \mathbf{x}^+ $$   
+Da $A^\top = V\Sigma^\top U^T $ segue che ogni vettore $ \mathbf{y_0} \in \text{Ker}(A^\top)=\text{Col}(A)^\perp$ è della forma $U Y_0$ per un unico $Y_0 \in \text{Ker}(\Sigma^\top)$ Quindi
+$$ C\mathbf{y_0} = CUY_0 = V\Sigma^+ U^\top U Y_0= V \Sigma^+ Y_0 = V0=0 $$
+\end{proof}
+\noindent
+\textit{Osservazione:} Le proprietà della matrice pseudoinversa possono essere equivalentemente riscritte come:
+\begin{itemize}
+    \item $AA^+A=A$,
+    \item $A^+AA^+=A^+$,
+    \item $(AA^+)^T=AA^+$,
+    \item $(A^+A)^T=A^+A$.
+\end{itemize}
+\noindent
+da cui è possibile ricavare la seguente formulazione esplicita della matrice pseudoinversa nel caso Rg($A$) massimo: $A^+ = (A^* A)^{-1} A^\top$. Per sostituzione facile verificare che  $A^+=V\Sigma^+U^T$ 
+\begin{align*}
+A^+ &= (A^ \top A)^{-1}A^ \top  =(V\Sigma U^ \top U\Sigma V^ \top )^{-1} V\Sigma U^ \top  \\
+    &=(V\Sigma^2 V^ \top )^{-1} V\Sigma U^ \top  =(V^ \top )^{-1} \Sigma^{-2} V^{-1} V\Sigma U^ \top  \\
+    &= V \Sigma^{-2}\Sigma U^ \top  = V\Sigma^{-1}U^ \top 
+\end{align*}
+
+\subsubsection{Soluzione ai Minimi Quadrati}
+\begin{definition}
+\textbf{Soluzione ai minimi quadrati}\\
+Data una matrice $A \in \R^{m \times n}$ e $ \mathbf{b} \in \R^m $  vogliamo trovare $\mathbf{x^*} \in \R^n$ tale che $$\mathbf{x^*} =	\min_{\mathbf{x} \in \R^{n}} \| A\mathbf{x} - \mathbf{b} \|_2 $$
+\end{definition}
+\begin{theorem}
+\textbf{Soluzione ai Minimi Quadrati di un sistema lineare}\\
+\textit{Hp:} Sia $A \in \mathbb{R}^{m \times n}$ una matrice di rango massimo con $m \geq n$, e sia $\mathbf{b} \in \mathbb{R}^m$.\\
+\textit{Ts:} Il sistema di equazioni lineari sovradeterminato $A\mathbf{x} = \mathbf{b}$ ha una soluzione ai minimi quadrati $\mathbf{x}^*$ data da
+\[
+\mathbf{x}^* = (A^\top A)^{-1}A^\top \mathbf{b}.
+\]
+\end{theorem} \noindent 
+Sfruttando la fattorizzazione SVD $A\mathbf{x} = \mathbf{b}$ può essere riscritto come
+\[
+U  \Sigma  V ^\top \mathbf{x} = \mathbf{b}
+\]
+otteniamo
+\[
+\mathbf{x}^* = ((U  \Sigma  V^\top )^\top U \Sigma V^\top)^{-1}(U \Sigma  V^\top )^\top \mathbf{b}
+\]
+\[
+\mathbf{x}^* = ( V \Sigma^\top \Sigma V^\top)^{-1}(V \Sigma^\top U^\top)\mathbf{b}
+\]
+ricordando che date due matrici quadrate $Q$ e $M$ vale $(MQ)^{-1} = Q^{-1}M^{-1}$ e che 
+$$
+\Sigma^\top \Sigma = 
+\begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r & 0 & \cdots & 0
+\end{bmatrix}
+\begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r \\
+0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0
+\end{bmatrix}
+=
+\begin{bmatrix}
+\sigma_1^2 & 0 & \cdots & 0 \\
+0 & \sigma_2^2 & \cdots & \vdots \\
+\vdots & \vdots & \ddots & 0  \\
+0 & \cdots & 0 & \sigma_r^2  \\
+\end{bmatrix}
+$$ è invertibile per definizione di Valori Singolari.\\
+\[
+\mathbf{x}^* = V (\Sigma^\top \Sigma)^{-1} \Sigma^\top U^\top \mathbf{b}
+\]
+Riscrivo sfruttando la fattorizzazione SVD ridotta
+\[
+\mathbf{x}^* = V' (\Sigma'^\top \Sigma')^{-1} \Sigma'^\top U'^\top \mathbf{b}
+\]
+dove possiamo semplificare
+\[
+(\Sigma^\top \Sigma)^{-1} \Sigma'^\top=
+\begin{bmatrix}
+\frac{1}{\sigma_1^2} & 0 & \cdots & 0 \\
+0 & \frac{1}{\sigma_2^2} & \cdots & \vdots \\
+\vdots & \vdots & \ddots & 0  \\
+0 & \cdots & 0 & \frac{1}{\sigma_r^2}  \\
+\end{bmatrix}\begin{bmatrix}
+    \sigma_1 & 0 & \cdots & 0 \\
+    0 & \sigma_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & \sigma_r
+\end{bmatrix}=\Sigma'^{-1}
+\]
+Il Risultato è quindi
+\[
+\mathbf{x}^* = V' \Sigma'^{-1} U'^\top \mathbf{b}
+\]
+
 \section{Algoritmi per il Calcolo}
-\section{Applicazioni Teoriche}
-\subsection{Pseudoinversa di una Matrice}
-\subsection{Soluzione ai Minimi Quadrati}
+\newpage
 \section{Applicazioni Pratiche}
 \subsection{PCA - Principal Component Analysis}
+La Principal Component Analysis (PCA) è una tecnica fondamentale nell'ambito della riduzione della dimensionalità e dell'analisi dei dati multivariati. L'obiettivo principale di questo metodo è l'identificazione delle "direzioni" lungo cui i dati sono maggiormente distribuiti al fine di rappresentare efficacemente la distribuzione delle variabili aleatorie da cui sono tratte le osservazioni. L'individuazione delle componenti principali è particolarmente utile nel caso di dataset di considerevoli dimensioni, in cui l'applicazione della PCA permette di ridurre la complessità dei dati mantenendo al contempo la maggior parte delle informazioni rilevanti, consentendo così una più facile visualizzazione e interpretazione.\\
+\\
+Ipotizziamo di condurre un certo numero $m$ di esperimenti aleatori le cui realizzazioni possono essere riassunte in un vettore di $n$ elementi. Il dataset prodotto sarà una matrice $X$ di dimensioni $(m,n)$. Possiamo quindi calcolare il vettore riga medio $\bar{\mathbf{x}}$ dove $$ \bar{\mathbf{x}}_j= \frac1m \sum_{i=1}^m X_{ij} \ \forall j=1, \dots, n$$
+e la matrice media come  $ \bar{X}= [1 \, \dots \, 1]^\top \bar{\mathbf{x}} \ \text{di dimensioni} \ (m,n)$.
+Definiamo ora la matrice $B= X-\bar{X}$ e sfruttando le proprietà del prodotto matriciale notiamo che la matrice di covarianza di $B$ è data da $$ C = \frac{1}{n-1} B^\top B$$ dove il fattore $n-1$ è datato dalla non distorsione dello stimatore.\\
+\\
+Per le proprietà matriciali dimostrate precedentemente la matrice $C$ è simmetrica e definita positiva coerentemente con quanto ci aspetteremmo da una matrice di covarianza dove $C_{ii} = 	\lambda_i^2$ è la varianza mentre $C_{ik} = 	\lambda_{ik}$ la covaranza fra la $i-esima$ e $k-esima$ colonna.\\
+Date le buone proprietà di $C$ per il \textbf{Teorema \ref{teo spetr}}, possiamo riscrivere l'espressione come segue
+\[
+C = VDV^\top \Rightarrow D = V^\top CV
+\]
+dove gli autovettori sono le componenti principali e gli autovalori le varianze. Intuitivamente, possiamo affermare che la $i$-esima coppia autovalore-autovettore indica la dispersione del dataset lungo una determinata direzione.\\
+Sappiamo inoltre che la matrice $V$ è la matrice contenente i vettori singolari di destra della matrice $B$, che possiamo riscrivere come $B = U\Sigma V^\top$. Sostituendo questa relazione otteniamo
+$$
+C = \frac{1}{n-1} B^\top B = \frac{1}{n-1} V \Sigma^\top \Sigma V^\top \Rightarrow D = \frac{1}{n-1} \Sigma^2
+$$
+dove $$
+\lambda_k = \frac{\sigma_k^2}{n-1}
+$$ 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth,height=6cm]{pca_ill.png}
+    \caption{Componenti Principali in $\R^3$}
+    \label{fig:pca_ill}
+\end{figure}
+    
+\begin{matlabcode}
+% Parametri della distribuzione gaussiana
+mu = [0 0 0]; % Media
+sigma = [1 0.5 0.2; 0.5 1 0.3; 0.2 0.3 1]; % Matrice di covarianza
+% Generazione del dataset casuale distribuito gaussiano in R^3
+rng(42); % Impostiamo il seed per la riproducibilità
+n = 400; % Numero di punti nel dataset
+data = mvnrnd(mu, sigma, n); % Generiamo dati casuali
+% Calcolo della PCA
+coeff = pca(data); % Calcoliamo i coefficienti della PCA
+% Plot del dataset e dei vettori della PCA
+% Plot dei punti
+scatter3(data(:,1), data(:,2), data(:,3), 'MarkerEdgeColor', 'k'); 
+hold on;
+% Primo,Secondo e Terzo vettore della PCA
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,1), coeff(2,1), coeff(3,1), 'r', 'LineWidth', 2); 
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,2), coeff(2,2), coeff(3,2), 'g', 'LineWidth', 2); A
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,3), coeff(2,3), coeff(3,3), 'b', 'LineWidth', 2); 
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('PCA');
+grid on; axis equal;
+legend({'Dati', 'Componente 1', 'Componente 2', 'Componente 3'});
+\end{matlabcode}
+
 \subsection{Compressione Immagini}
+La compressione delle immagini tramite la fattorizzazione SVD è un approccio fondamentale nell'ambito della riduzione della dimensionalità dei dati. L'obiettivo principale di questa procedura è quello di ridurre lo spazio di archiviazione richiesto per codificare le informazioni contenute in un'immagine mantenendo al contempo una qualità visiva accettabile.\\
+Dal punto di formale possiamo rappresentare un'immagine in bianco e nero come una matrice $X$ dove a ciascun elemento è associato un pixel dell'immagine con valori da 0 a 1 che rappresentano la scala di grigi che va dal bianco, 0, al nero , 1. \\
+Per il \textbf{Teorema \ref{EY}} siamo in grado di costruire un'appossimazione progressiva della matrice $X$ sfruttando la sommatoria dei valroi singolari di destra, sinistra e dei valori singolari minimizzando l'errore commesso. 
+$$ X_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top $$\\
+\\
+Inoltre, sfruttando il \textbf{Corollario \ref{cor 4}} saremo in grado di stimare l'errore commesso
+$$\|X-X_k\|_2 = \| \sum_{i=k+1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top\|_2=\sigma_{k+1} $$ 
+
 \subsection{DMD - Dyniamic Mode Decomposition}
-\subsubsection{Esempio}
+La Dynamic Mode Decomposition (DMD) è uno strumento per l'analisi dei dati  e il rilevamento di strutture coerenti all'interno di essi. La DMD si basa sull'analisi di dataset spazio-temporali composti dall'unione di molteplici osservazioni di un certo numero di grandezze in determinati istanti di tempo; può essere applicata a una vasta gamma di ambiti, tra cui serie temporali, campioni di sensori distribuiti e immagini dinamiche.\\ L'approccio si concentra sull'identificazione di strutture coerenti o modi dominanti che emergono nei dati, consentendo la descrizione e la comprensione dei fenomeni  sottostanti  di tipo anche non lineare e non stazionario rendendo questo metodo particolarmente adatto a sistemi complessi.\\
+\\
+Dato un insieme di osservazioni di $m$ parametri in $n$ istanti di tempo $\{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n$, dove $t_k'=t_k + \Delta t$,  costruiamo la matrice $X$
+$$ X= \begin{bmatrix}
+| & | &  & | \\
+\mathbf{x}(t_1) & \mathbf{x}(t_2) & \dots & \mathbf{x}(t_n)\\
+| & | & & |
+\end{bmatrix} \quad \quad
+X'= \begin{bmatrix}
+| & | &  & | \\
+\mathbf{x}(t_1') & \mathbf{x}(t_2') & \dots & \mathbf{x}(t_n')\\
+| & | & & |
+\end{bmatrix}
+$$
+Assumendo un campionamento uniforme possiamo scrivere che $t_k=k\Delta t$ e $t_k'= t_k+\Delta t=t_{k+1}$.
+L'obbiettivo della DMD si riassume nel trovare la matrice $A$ tale che $X' \simeq AX$ e per l'ipotesi di campionamento uniforme segue che $\mathbf{x}_{k+1} \simeq A\mathbf{x}_k$.\\
+Dal punto di vista formale matematico il problema è equivalente ad un problema di minimizzazione la cui soluzione è nota in forma esplicita $$ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $$
+Tuttavia, nonostante siamo in grado di trovare una soluzione esplicita se consideriamo una matrice $X \in \mathbb{R}^{m \times n}$ dove $m$ sono i parametri osservati e $n$ le realizzazioni temporali, notiamo che la matrice $A$ dovrebbe avere dimensioni $m \times m$. Poiché nelle applicazioni i parametri osservati sono frequentemente dell'ordine di $10^6$, risulta computazionalmente ingestibile il calcolo della matrice $A$.
+
+Sfruttando la fattorizzazione SVD saremo in grado di scomporre 
+
+\section{DMD e Modelli Epidemiologici}
+
+\newpage
+\section{Bibliografia}
+\begin{thebibliography}{99}
+\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
+\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
+\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
+\end{thebibliography}
+
+\printindex
+
 \end{document}
