@@ -29,6 +29,7 @@
 
 \title{Tesi}
 \author{Federico Riva\\Ingegneria Matematica\\Politecnico di Milano}
+\title{SVD}
 \date{Relatore: Professor Marco Verani}
 
 \maketitle
@@ -39,6 +40,72 @@
 \subsection{Introduzione}
 La decomposizione SVD è una fattorizzazione algebrica che consente di rappresentare una matrice come il prodotto di tre matrici ciascuna con caratteristiche specifiche. Le applicazioni di questo metodo possono essere ritrovate in una vasta gamma di campi tra cui l'analisi dei dati, il machine learning e l'elaborazione delle immagini.
 
+\subsection{Premessa Teorica}
+Prima di entrare nel vivo della trattazione della fattorizzazione SVD della matrici è necessario fornire una serie di definizioni, Teoremi e proposizioni preliminari utili per la comprensione dei passaggi che seguiranno.
+\begin{definition}
+    \textbf{Matrice Ortogonale}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice ortogonale se $Q^\top      Q=I$.
+\end{definition}
+\begin{definition}
+	\textbf{Matrice Pseudodiagonale}\\ Una matrice $M$ si dice pseudodiagonale se $m_{ij}=0 \ \forall \ i\neq j$.
+\end{definition}
+\begin{definition}
+    \textbf{Matrice Simmetrica}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice simmetrica se $Q^\top      =Q$.
+\end{definition}
+\begin{definition}
+    \textbf{Forma Quadratica}\\ Si definisce forma quadratica un polinomio di secondo grado in $n$ variabili $p: \mathbb{R}^n \rightarrow \mathbb{R}$ t.c.
+    \[
+    p(x)=p(x_1,\dots,x_n)=\sum_{1 \leq i,j \leq n}a_{ij}x_ix_j=a_{11}x_1^2+a_{12}x_1x_2 + \dots + a_{nn-1}x_nx_{n-1}+a_{nn}x_n^2=\mathbf{x}^\top      A\mathbf{x}
+    \]
+    dove $\mathbf{x} = (x_1, \dots, x_n)$ e $A$ è una matrice simmetrica di dimensione $n \times n$.
+\end{definition}
+\begin{proposition}\label{prop 1}
+\textbf{}\\
+\textit{Hp:} Data una qualsiasi $M\in\mathbb{R}^{m \times n}$\\
+\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e definite positive.
+\end{proposition}
+\begin{proof}
+1) Vogliamo dimostrare che $D=D^\top      $. Segue quindi dalle proprietà di trasposizione del prodotto di due matrici: $D^\top      =(M^\top      M)^\top      =M^\top  (M^\top)^\top =M^\top M   =D$. Si dimostra in maniera analoga il risultato per $S$.\\
+2) Dal momento che è una matrice quadrata per dimostrare la semipositività della matrice $A^\top      A$  possiamo studiare il segno della forma quadratica associata. Se quest'ultima sarà positiva allora lo saranno anche tutti gli autovalori.\\
+$$ \forall \mathbf{x}\neq 0: \mathbf{x} \in \R^n$$ $$\mathbf{x}^\top      A^\top      A\mathbf{x}=(A\mathbf{x})^\top      (A\mathbf{x})= \|A\mathbf{x}\|^2\geq 0$$
+\end{proof}
+\noindent
+\textit{Osservazione}: Poiché gli autovalori che otteniamo sono $\geq$ 0 possiamo calcolarne la radice quadrata.
+\begin{proposition}\label{prop 2}
+\textbf{}\\
+\textit{Hp:} Sia $A \in \R^{m \times n}$ con $m \geq n$ con $\{\lambda_i(A^\top A)\}_{i=1}^{n}$ e $\{\lambda_j(A A^\top)\}_{j=1}^{m} $ \\
+\textit{Ts:}  $ \{\lambda_i(A^\top A)\}_{i=1}^{n} \subset \{\lambda_j(A A^\top)\}_{j=1}^{m} $ .
+\end{proposition}
+\begin{proof}
+Ipotizziamo che la coppia autovalori autovettore $(\mathbf{x},\lambda)$ sia associata alla matrice $A^\top      A$. Possiamo quindi scrivere $$A^\top      A\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^\top      A\mathbf{x}=\lambda A\mathbf{x}$$
+Ma allora definendo $\mathbf{y}=A\mathbf{x}$ possiamo riscrivere $$AA^\top      \mathbf{y}=\lambda \mathbf{y}$$
+Il che conclude la dimostrazione poiché prova che  $\lambda$ è un autovalore anche della matrice $AA^\top      $. 
+\end{proof}
+
+\begin{corollary}\label{cor 1}
+\textbf{}\\
+\textit{Hp:} Sia $M \in \R^{n \times n}$ con autovalori $\mathbf{\lambda}=[\lambda_1, \dots, \lambda_n ]$\\
+\textit{Ts:} Gli autovalori di $M^\top      M \ \text{e} \ MM^\top      $ sono gli stessi e valgono $\mathbf{\lambda}^2=[\lambda_1^2, \dots, \lambda_n^2 ]$
+\end{corollary}
+\begin{proof}
+\textbf{Proposizione \ref{prop 2}} nel caso particolare $A=M$
+\end{proof}
+
+\begin{theorem}\label{teo spetr}
+\textbf{Teorema Spettrale}\\
+\textit{Hp:} Data $Q\in\mathbb{R}^{n\times n}$ una matrice simmetrica\\
+\textit{Ts:} È ortogonalmente diagonalizzabile $Q=U^{-1}DU=U^\top      DU$
+\end{theorem}
+\noindent
+Prendendo in considerazione le \textbf{Proposizioni \autoref{prop 1}}, \textbf{\autoref{prop 2}} ed il \textbf{Teorema \ref{teo spetr}} possiamo osservare che data una qualsiasi matrice $A$ è possibile costruire a partire da essa due matrici simmetriche ortogonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
+\begin{definition}
+	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinistra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^\top      =U^\top      D_lU$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
+\end{definition}
+\begin{definition}
+	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^\top      A=V^\top      D_rV$ e compongono la \textit{Matrice Singolare di destra} $V$.
+\end{definition}
+\begin{definition}
+	\textbf{Valori Singolari}\\ I valori singolari sono le radici quadrate degli autovalori non nulli di $A^\top      A$ e $A^\top      A$\\ $\sigma_1 \geq \dots \geq \sigma_{r=\min{n,m}} \geq 0$. Indicheremo con $r$ il numero di valori singolari che nel caso di assenza di autovalori nulli sarà $r=\min{\{m,n\}}$.
+\end{definition}
 
 \subsection{Definizione}
 Sia $A\in\mathbb{R}^{m\times n}$, oppure equivalentemente $A\in\mathbb{C}^{m\times n}$, allora la decomposizione SVD della una matrice nel caso $m>n$ è definita come:
@@ -85,71 +152,6 @@ Dove:
     \item $V\in\mathbb{R}^{n\times n}$ è una matrice ortogonale contenente i vettori singolari destri di $A$.
 \end{itemize}
 
-\begin{definition}
-    \textbf{Matrice Ortogonale}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice ortogonale se $Q^\top      Q=I$.
-\end{definition}
-\begin{definition}
-	\textbf{Matrice Pseudodiagonale}\\ Una matrice $M$ si dice pseudodiagonale se $m_{ij}=0 \ \forall \ i\neq j$.
-\end{definition}
-\begin{definition}
-    \textbf{Matrice Simmetrica}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice simmetrica se $Q^\top      =Q$.
-\end{definition}
-\begin{definition}
-    \textbf{Forma Quadratica}\\ Si definisce forma quadratica un polinomio di secondo grado in $n$ variabili $p: \mathbb{R}^n \rightarrow \mathbb{R}$ t.c.
-    \[
-    p(x)=p(x_1,\dots,x_n)=\sum_{1 \leq i,j \leq n}a_{ij}x_ix_j=a_{11}x_1^2+a_{12}x_1x_2 + \dots + a_{nn-1}x_nx_{n-1}+a_{nn}x_n^2=\mathbf{x}^\top      A\mathbf{x}
-    \]
-    dove $\mathbf{x} = (x_1, \dots, x_n)$ e $A$ è una matrice simmetrica di dimensione $n \times n$.
-\end{definition}
-\begin{proposition}\label{prop 1}
-\textbf{}\\
-\textit{Hp:} Data una qualsiasi $M\in\mathbb{R}^{m \times n}$\\
-\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e definite positive.
-\end{proposition}
-\begin{proof}
-1) Vogliamo dimostrare che $D=D^\top      $. Segue quindi dalle proprietà di trasposizione del prodotto di due matrici: $D^\top      =(M^\top      M)^\top      =MM^\top      =D$. Si dimostra in maniera analoga il risultato per $S$.\\
-2) Per dimostrare la semipositività della matrice $A^\top      A$ dal momento che è una matrice quadrata possiamo studiare il segno della forma quadratica associata. Se quest'ultima sarà positiva allora lo saranno anche tutti gli autovalori.\\
-$$ \forall \mathbf{x}\neq 0: \mathbf{x} \in \R^n$$ $$\mathbf{x}^\top      A^\top      A\mathbf{x}=(A\mathbf{x})^\top      (A\mathbf{x})= \|A\mathbf{x}\|^2\geq 0$$
-\end{proof}
-\noindent
-\textit{Osservazione}: Gli autovalori che otterremo dalle due matrici saranno $\geq$ 0 e potremo quindi calcolarne la radice quadrata.
-\begin{proposition}\label{prop 2}
-\textbf{}\\
-\textit{Hp:} Sia $A \in \R^{m \times n}$\\
-\textit{Ts:} $A^\top      A$ e $AA^\top      $ hanno gli stessi autovalori non nulli.
-\end{proposition}
-\begin{proof}
-Ipotizziamo che la coppia autovalori autovettore $(\mathbf{x},\lambda)$ sia associata alla matrice $A^\top      A$. Possiamo quindi scrivere $$A^\top      A\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^\top      A\mathbf{x}=\lambda A\mathbf{x}$$
-Ma allora definendo $\mathbf{y}=A\mathbf{x}$ possiamo riscrivere $$AA^\top      \mathbf{y}=\lambda \mathbf{y}$$
-Il che conclude la dimostrazione poiché prova che  $\lambda$ è un autovalore anche della matrice $AA^\top      $
-\end{proof}
-
-\begin{corollary}\label{cor 1}
-\textbf{}\\
-\textit{Hp:} Sia $M \in \R^{n \times n}$ con autovalori $\mathbf{\lambda}=[\lambda_1, \dots, \lambda_n ]$\\
-\textit{Ts:} Gli autovalori di $M^\top      M \ \text{e} \ MM^\top      $ sono gli stessi e valgono $\mathbf{\lambda}^2=[\lambda_1^2, \dots, \lambda_n^2 ]$
-\end{corollary}
-\begin{proof}
-\textbf{Proposizione \ref{prop 2}} nel caso particolare $A=M$
-\end{proof}
-
-\begin{theorem}\label{teo spetr}
-\textbf{Teorema Spettrale}\\
-\textit{Hp:} Data $Q\in\mathbb{R}^{n\times n}$ una matrice simmetrica\\
-\textit{Ts:} È ortogonalmente diagonalizzabile $Q=U^{-1}DU=U^\top      DU$
-\end{theorem}
-\noindent
-Prendendo in considerazione le \textbf{Proposizioni \autoref{prop 1}}, \textbf{\autoref{prop 2}} ed il \textbf{Teorema \ref{teo spetr}} possiamo osservare che data una qualsiasi matrice $A$ è possibile costruire a partire da essa due matrici simmetriche ortogonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
-\begin{definition}
-	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinistra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^\top      =U^\top      D_lU$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
-\end{definition}
-\begin{definition}
-	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^\top      A=V^\top      D_rV$ e compongono la \textit{Matrice Singolare di destra} $V$.
-\end{definition}
-\begin{definition}
-	\textbf{Valori Singolari}\\ I valori singolari sono le radici quadrate degli autovalori non nulli di $A^\top      A$ e $A^\top      A$\\ $\sigma_1 \geq \dots \geq \sigma_{r=\min{n,m}} \geq 0$. Indicheremo con $r$ il numero di valori singolari che nel caso di assenza di autovalori nulli sarà $r=\min{\{m,n\}}$.
-\end{definition}
-
 \subsection{Legame fra la decomposizione SVD ed il Teorema Spettrale}
 Da un punto di vista intuitivo la fattorizzazione SVD può essere considerata come la generalizzazione del concetto di diagonalizzazione di una matrice quadrata; infatti se la seconda può essere applicata solamente a matrici quadrate $(n \times n)$ risulta valida per qualsiasi tipo di matrice $(m \times n)$ senza limite alcuno sulla sua forma.\\
 Se $A$ ammette la fattorizzazione SVD allora $A=U\Sigma V^\top      $ valgono le seguenti relazioni: $$A^\top      A=(U\Sigma V^\top      )^\top      U\Sigma V^\top      =V\Sigma^\top      U^\top      U\Sigma V^\top      =V\Sigma^\top       \Sigma V^\top      $$
@@ -158,7 +160,7 @@ Vale dunque un risultato ancora più specifico della semplice diagonalizzazione 
 
 \subsection{Interpretazione geometrica}
 Data una matrice $A \in \R^{m \times n}$ consideriamo l'applicazione lineare ad essa associata $$A: \R^n \rightarrow \R^m$$
-La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche rappresentate dalle 3 matrici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rappresentano una rotazione o una simmetria assiale, in generale una isometria, mentre la matrice $\Sigma$ è una dilatazione di intensità $\sigma_i$ lungo la componente $\mathbf{x}_i$ .Di seguito illustriamo visivamente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellise.
+La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche descritte dalle 3 matrici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rappresentano una rotazione o una simmetria assiale, in generale una isometria, mentre la matrice $\Sigma$ è una dilatazione di intensità $\sigma_i$ lungo la componente $\mathbf{x}_i$ .Di seguito illustriamo visivamente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellise.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.85\textwidth,height=5.35cm]{geo.png}
@@ -340,8 +342,8 @@ Analogamente a 1. e 2. sfruttando le proprietà della trasposizione del prodotto
 \subsection{Dimostrazione della decomposizione SVD e Teorema Eckart-Young}
 \begin{theorem}\label{svd}
 \textbf{Decomposizione a valori singolari}\\
-\textit{Hp:} Sia $A \in \R^{m \times n}$ e $\text{Rg}(A)=r$. Allora esistono una matrice pseudodiagonale $\Sigma \in \R^{m \times n}$ con $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ e $U$ e $V$ due matrici ortogonali.\\
-\textit{Ts:} Possiamo riscrivere la matrice $A$ come $A=U\Sigma V^\top$. Tale decomposizione di dice decomposizione ai valori singolari di $A$, non è unica, ma in ogni decomposizione siffatta gli elementi non nulli $\sigma_k$ di $\Sigma$ sono i valori singolari di $A$. 
+\textit{Hp:} Sia $A \in \R^{m \times n}$ e $\text{Rg}(A)=r$. \\
+\textit{Ts:} Esistono una matrice pseudodiagonale $\Sigma \in \R^{m \times n}$ con $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ e due matrici ortogonali $U$ e $V$ tali che possiamo riscrivere la matrice $A$ come $A=U\Sigma V^\top$. Tale decomposizione di dice decomposizione ai valori singolari di $A$, non è unica, ma in ogni decomposizione siffatta gli elementi non nulli $\sigma_k$ di $\Sigma$ sono i valori singolari di $A$. 
 \end{theorem}
 \subsubsection{Dimostrazione}
 Data una matrice $A \in \R^{m \times n}$ poiché $A^\top      A \in \R^{n \times n}$ è simmetrica e semidefinita positiva segue dal Teorema Spettrale che $\exists$ una matrice ortonormale $V \in \R^{n \times n}$ tale che $$ A^\top      A=V\bar{D}V^\top      $$ e a sua volta poiché $V^{-1}=V^\top      $ $$V^\top      A^\top      AV=\bar{D}= \begin{bmatrix}D & 0 \\ 0 & 0\end{bmatrix}$$
@@ -380,7 +382,7 @@ $$U\Sigma V^\top      = [U_1 \ U_2]\begin{bmatrix}
 \begin{bmatrix} D^\frac{1}{2}V_1^\top       \\ 0 \end{bmatrix}
 = U_1 D^\frac{1}{2} V_1^\top       = A $$\qed
 
-\subsubsection{Norme Matriciali}
+\subsubsection{Norme Matriciali e Proprietà}
 Introduciamo ora alcune nozioni sulle norme matriciali che adopereremo per discutere alcuni risultati di approssimazione.
 Dal momento che $\R^{m \times n}$ è isomorfo a $\R^{mn}$ la norma di una matrice è equivalente alla norma di un vettore. 
 \begin{definition}
@@ -710,15 +712,15 @@ Il Risultato è quindi
 
 \section{Algoritmi per il Calcolo}
 \newpage
-\section{Applicazioni Pratiche}
+\section{Applicazioni}
 \subsection{PCA - Principal Component Analysis}
-La Principal Component Analysis (PCA) è una tecnica fondamentale nell'ambito della riduzione della dimensionalità e dell'analisi dei dati multivariati. L'obiettivo principale di questo metodo è l'identificazione delle "direzioni" lungo cui i dati sono maggiormente distribuiti al fine di rappresentare efficacemente la distribuzione delle variabili aleatorie da cui sono tratte le osservazioni. L'individuazione delle componenti principali è particolarmente utile nel caso di dataset di considerevoli dimensioni, in cui l'applicazione della PCA permette di ridurre la complessità dei dati mantenendo al contempo la maggior parte delle informazioni rilevanti, consentendo così una più facile visualizzazione e interpretazione.\\
+La Principal Component Analysis (PCA) è una tecnica che trova applicazione nell'ambito della riduzione della dimensionalità e dell'analisi di dati multivariati. L'obiettivo principale di questo metodo è l'identificazione delle "direzioni" lungo cui i dati sono maggiormente distribuiti al fine di determinare efficacemente i parametri delle legge delle variabili aleatorie da cui sono tratte le osservazioni. L'individuazione delle componenti principali è particolarmente utile nel caso di dataset di considerevoli dimensioni, in cui l'applicazione della PCA permette di ridurre la complessità dei dati mantenendo pur mantenendo al contempo la maggior parte delle informazioni rilevanti, consentendo così una più facile visualizzazione e interpretazione.\\
 \\
-Ipotizziamo di condurre un certo numero $m$ di esperimenti aleatori le cui realizzazioni possono essere riassunte in un vettore di $n$ elementi. Il dataset prodotto sarà una matrice $X$ di dimensioni $(m,n)$. Possiamo quindi calcolare il vettore riga medio $\bar{\mathbf{x}}$ dove $$ \bar{\mathbf{x}}_j= \frac1m \sum_{i=1}^m X_{ij} \ \forall j=1, \dots, n$$
-e la matrice media come  $ \bar{X}= [1 \, \dots \, 1]^\top \bar{\mathbf{x}} \ \text{di dimensioni} \ (m,n)$.
-Definiamo ora la matrice $B= X-\bar{X}$ e sfruttando le proprietà del prodotto matriciale notiamo che la matrice di covarianza di $B$ è data da $$ C = \frac{1}{n-1} B^\top B$$ dove il fattore $n-1$ è datato dalla non distorsione dello stimatore.\\
+Ipotizziamo di condurre un certo numero $m$ di esperimenti aleatori le cui realizzazioni possono essere riassunte in un vettore di $n$ elementi. Il dataset prodotto sarà una matrice $X$ di dimensioni $(m,n)$. Possiamo quindi calcolare il vettore riga medio $\bar{\mathbf{x}}$ sfruttando la media campionaria di un vettore di variabili aleatorie $$ \bar{\mathbf{x}}_j= \frac1m \sum_{i=1}^m X_{ij} \ \forall j=1, \dots, n$$
+Una volta ottenuto $\mathbf{\bar{x}}$ costruiamo la matrice media $ \bar{X}= [1 \, \dots \, 1]^\top \bar{\mathbf{x}} \ \text{di dimensioni} \ (m,n)$.
+Definiamo ora la matrice $B= X-\bar{X}$; questo passaggio equivale ad una traslazione dell'origine del dataset. Infine, sfruttando le proprietà del prodotto matriciale, notiamo che la matrice di covarianza di $B$ è data da $$ C = \frac{1}{n-1} B^\top B$$ dove il fattore $\frac{1}{n-1}$ è dato dalla non distorsione dello stimatore della varianza campionaria.\\
 \\
-Per le proprietà matriciali dimostrate precedentemente la matrice $C$ è simmetrica e definita positiva coerentemente con quanto ci aspetteremmo da una matrice di covarianza dove $C_{ii} = 	\lambda_i^2$ è la varianza mentre $C_{ik} = 	\lambda_{ik}$ la covaranza fra la $i-esima$ e $k-esima$ colonna.\\
+Per le proprietà matriciali dimostrate precedentemente la matrice $C$ è simmetrica e definita positiva; ciò risulta coerente con quanto ci aspetteremmo da una matrice di covarianza dove $C_{ii} = 	\lambda_i^2$ è la varianza mentre $C_{ik} = 	\lambda_{ik}$ la covarianza campionaria fra la $i-esima$ e $k-esima$ colonna.\\
 Date le buone proprietà di $C$ per il \textbf{Teorema \ref{teo spetr}}, possiamo riscrivere l'espressione come segue
 \[
 C = VDV^\top \Rightarrow D = V^\top CV
@@ -731,6 +733,7 @@ $$
 dove $$
 \lambda_k = \frac{\sigma_k^2}{n-1}
 $$ 
+Illustriamo ora questo concetto dal punto di vista grafico 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth,height=6cm]{pca_ill.png}
@@ -742,10 +745,10 @@ $$
 % Parametri della distribuzione gaussiana
 mu = [0 0 0]; % Media
 sigma = [1 0.5 0.2; 0.5 1 0.3; 0.2 0.3 1]; % Matrice di covarianza
-% Generazione del dataset casuale distribuito gaussiano in R^3
-rng(42); % Impostiamo il seed per la riproducibilità
+% Generazione del dataset casuale distribuito gaussianamente in R^3
+rng(42); % Impostiamo il seed per la replicabilità
 n = 400; % Numero di punti nel dataset
-data = mvnrnd(mu, sigma, n); % Generiamo dati casuali
+data = mvnrnd(mu, sigma, n); % Generiamo i dati casuali
 % Calcolo della PCA
 coeff = pca(data); % Calcoliamo i coefficienti della PCA
 % Plot del dataset e dei vettori della PCA
@@ -758,7 +761,8 @@ quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
 quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
         coeff(1,2), coeff(2,2), coeff(3,2), 'g', 'LineWidth', 2); A
 quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
-        coeff(1,3), coeff(2,3), coeff(3,3), 'b', 'LineWidth', 2); 
+        coeff(1,3), coeff(2,3), coeff(3,3), 'b', 'LineWidth', 2);
+% Titoli e grafica 
 xlabel('X'); ylabel('Y'); zlabel('Z');
 title('PCA');
 grid on; axis equal;
@@ -772,12 +776,12 @@ Per il \textbf{Teorema \ref{EY}} siamo in grado di costruire un'appossimazione p
 $$ X_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top $$\\
 \\
 Inoltre, sfruttando il \textbf{Corollario \ref{cor 4}} saremo in grado di stimare l'errore commesso
-$$\|X-X_k\|_2 = \| \sum_{i=k+1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top\|_2=\sigma_{k+1} $$ 
+$$\|X-X_k\|_2 = \| \sum_{i=k+1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top\|_2=\sigma_{k+1} $$
 
 \subsection{DMD - Dyniamic Mode Decomposition}
-La Dynamic Mode Decomposition (DMD) è uno strumento per l'analisi dei dati  e il rilevamento di strutture coerenti all'interno di essi. La DMD si basa sull'analisi di dataset spazio-temporali composti dall'unione di molteplici osservazioni di un certo numero di grandezze in determinati istanti di tempo; può essere applicata a una vasta gamma di ambiti, tra cui serie temporali, campioni di sensori distribuiti e immagini dinamiche.\\ L'approccio si concentra sull'identificazione di strutture coerenti o modi dominanti che emergono nei dati, consentendo la descrizione e la comprensione dei fenomeni  sottostanti  di tipo anche non lineare e non stazionario rendendo questo metodo particolarmente adatto a sistemi complessi.\\
+La Dynamic Mode Decomposition (DMD) è uno strumento per l'analisi dei dati  e il rilevamento di strutture coerenti all'interno di essi. La DMD si basa sull'analisi di dataset spazio-temporali composti dall'unione di molteplici osservazioni di un certo numero di grandezze in determinati istanti di tempo. Gli ambiti di applicazione possono variare dalle serie temporali alle immagini dinamiche.\\ L'approccio si concentra sull'identificazione di strutture coerenti, o modi dominanti, che emergono nei dati consentendo così la descrizione e la comprensione dei fenomeni sottostanti anche di tipo non lineare e non stazionario. Grazie a queste caratteristiche la DMD risulta essere particolarmente adatta a sistemi complessi.\\
 \\
-Dato un insieme di osservazioni di $m$ parametri in $n$ istanti di tempo $\{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n$, dove $t_k'=t_k + \Delta t$,  costruiamo la matrice $X$
+Dato un insieme di osservazioni di $m$ parametri in $n$ istanti di tempo $\{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n$, dove $t_k'=t_k + \Delta t$,  costruiamo le matrici $X$ e $X'$ così definite
 $$ X= \begin{bmatrix}
 | & | &  & | \\
 \mathbf{x}(t_1) & \mathbf{x}(t_2) & \dots & \mathbf{x}(t_n)\\
@@ -789,14 +793,52 @@ X'= \begin{bmatrix}
 | & | & & |
 \end{bmatrix}
 $$
-Assumendo un campionamento uniforme possiamo scrivere che $t_k=k\Delta t$ e $t_k'= t_k+\Delta t=t_{k+1}$.
-L'obbiettivo della DMD si riassume nel trovare la matrice $A$ tale che $X' \simeq AX$ e per l'ipotesi di campionamento uniforme segue che $\mathbf{x}_{k+1} \simeq A\mathbf{x}_k$.\\
-Dal punto di vista formale matematico il problema è equivalente ad un problema di minimizzazione la cui soluzione è nota in forma esplicita $$ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $$
-Tuttavia, nonostante siamo in grado di trovare una soluzione esplicita se consideriamo una matrice $X \in \mathbb{R}^{m \times n}$ dove $m$ sono i parametri osservati e $n$ le realizzazioni temporali, notiamo che la matrice $A$ dovrebbe avere dimensioni $m \times m$. Poiché nelle applicazioni i parametri osservati sono frequentemente dell'ordine di $10^6$, risulta computazionalmente ingestibile il calcolo della matrice $A$.
+Assumendo un campionamento uniforme possiamo scrivere che $t_k=k\Delta t$ e di conseguenza quindi vale la seguente relazione $t_k'= t_k+\Delta t=t_{k+1}$.
+L'obbiettivo della DMD si riassume nel trovare la matrice $A$ tale che $X' \simeq AX$ e per l'ipotesi di campionamento uniforme unita alle proprietà del prodotto matriciale segue che $\mathbf{x}_{k+1} \simeq A\mathbf{x}_k$.\\
+Dal punto di vista matematico il problema si traduce nel seguente problema di minimizzazione $ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $
+\begin{center}
+\textcolor{orange}{ricopio dal quad.}
+\end{center}
+Siamo quindi in grado di individuare la soluzione in forma esplicita $$ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $$
+Una volta ottenuta la matrice quadrata $A$ saremo interessati a trovare i suoi autovalori e autovettori. 
+Tuttavia, nonostante siamo in possesso di una formula esplicita che ci permette calcolarla se consideriamo una matrice $X \in \mathbb{R}^{m \times n}$ dove $m$ sono i parametri osservati e $n$ le realizzazioni temporali, notiamo che la matrice $A$ dovrebbe avere dimensioni $m \times m$. Nelle applicazioni, dove accade di frequente che i parametri osservati sono dell'ordine di $10^6$, ciò si traduce in una matrice con $10^{12}$ elementi rendendone quindi computazionalmente ingestibile il calcolo.
+\\
+Per ovviare a questo problema possiamo ricorrere alla POD (proper orthogonal decomposition) in modo da ottenere una matrice $\bar{A}$ di dimensioni sensibilmente minori , $(n \times n)$, ma che al contempo approssimi al meglio le caratteristiche di $A \in \R^{m \times m}$.
+\subsubsection{POD - Proper Orthogonal Decomposition}
 
-Sfruttando la fattorizzazione SVD saremo in grado di scomporre 
 
+\begin{large}{\textbf{Implementazione dell'Algoritmo}}\end{large}\\
+\textbf{Step 1.}\\
+Calcoliamo la fattorizzazione SVD ridotta della matrice $X=U'\Sigma' V'^\top$ dove $U' \in \R^{m \times r}$, $\Sigma' \in \R^{r \times r}$ e $V' \in \R^{n \times r}$ con $r \leq n = \min{\{m,n\}} $.  Questa scelta risulta essere cruciale  nel caso di elevate dimensioni della matrice $X$ e di Rg($X$) non massimo permettendo di semplificare il costo computazionale dei passaggi che seguiranno. \\
+Ricordiamo che per le proprietà della fattorizzazione SVD ridotta vale la seguente relazione $U'^\top U' = I_r \in \R^{r \times r} \ \text{e} \ V'^\top V' = I_r \in \R^{r \times r} $ e le colonne della matrice $U'$ prendono il nome di Modi della POD. \\
+\textbf{Step 2.}\\
+Dalla soluzione del problema di minimizzazione sappiamo che la soluzione  $A=X'X^+$ può essere scritta come $$A=X'V'\Sigma'^{-1}U'^\top$$
+In questo modo otteniamo una matrice $A$ di dimensioni $$(m \times m ) = (m \times n) \times (n \times r) \times ( r \times r) \times ( r \times m) $$Tuttavia come evidenziato in precedenza il nostro interesse si concentra sui primi $r$ autovalori ed autovettori principali di $A$ e per ridurne le dimensioni pur mantenendo la massima "somiglianza" alla matrice di partenza sfruttiamo la POD 
+$$\bar{A}=U'^\top A U' = U'^\top X' V' \Sigma'^{-1} \ \in \R^{r \times r}$$
+dove è importante notare che gli $r$ autovalori di $\bar{A}$ sono gli stessi $r$ autovalori principali della matrice $A$. 
+Possiamo quindi trovare direttamente la matrice $\bar{A}$ senza calcolare la matrice estesa $A$ riducendo così sensibilmente il costo computazionale. Una volta introdotta la matrice $\bar{A}$ il modello lineare diventa $\mathbf{\bar{x}}_{k+1} \simeq \bar{A} \mathbf{\bar{x}}_k $ dove $\mathbf{x}=U' \mathbf{\bar{x}}$
+\\
+\textbf{Step 3.}\\
+Calcoliamo la decomposizione spettrale della matrice $\bar{A}$  $$\bar{A} W = W \Lambda$$
+dove le colonne $w_i$ $i = 1 \dots r$ della matrice $W \in \R^{n \times n}$ sono gli autovettori di $\bar{A}$ mentre $\Lambda \in R^{n \times n}$ è la matrice diagonale contenente gli autovalori.\\
+\textbf{Step 4.}\\
+I modi $\Phi \in \R^{m \times m}$ sono ricostruiti sfruttando la matrice degli autovettori $W$ del modello lineare di dimensioni ridotte e la matrice dei dati $X'$
+$$ \Phi = X'V'\Sigma'^{-1}W $$  notiamo in particolare le dimensioni delle matrici che compongono il prodotto che genera la matrice quadrata finale 
+$(m \times m) = (m \times n) \times (n \times r) \times (r \times r) \times (r \times r)$.\\
+Notiamo che abbiamo quindi ricavato gli autovalori della matrice di partenza $A$ senza calcolarne esplicitamente né il valore ne la decomposizione spettrale
+
+$$A \Phi = X'X^+ \Phi = X V' \Sigma'^{-1} U'^\top X'V'\Sigma'^{-1}W $$ e ricordando che la matrice $\bar{A} =  U'^\top X' V' \Sigma'^{-1}$ e che $\bar{A} W = W \Lambda$ otteniamo
+$$ A \Phi = X'V'\Sigma'^{-1} \bar{A}  W = X'V'\Sigma'^{-1} W \Lambda  = \Phi \Lambda $$
+
+Una volta calcolati i Modi della Dynamic Mode Decomposition sorge spontanea una domanda: data la matrice $\Phi$ e $\Lambda$ siamo in grado di ricostruire 
+\textcolor{orange}{
+Completo con 
+Ampiezza dei modi b
+Ricsotruzione dello stato pag 264 e 265 fondamentali per l'articolo medico
+}
 \section{DMD e Modelli Epidemiologici}
+Come abbiamo osservato nel paragrafo precedente la DMD si presta all'analisi di dati generati da sistemi complessi con un comportamento fortemente non lineare. Un esempio di sistemi di questo timo sono i modelli pandemici tra cui uno dei più noti è il Modello SIR su cui concentreremo le nostre attenzioni da qui in poi.  
+
 
 \newpage
 \section{Bibliografia}
