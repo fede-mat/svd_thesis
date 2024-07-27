@@ -3,15 +3,16 @@
 \usepackage{graphicx} % Per l'inserimento di immagini
 \usepackage{geometry} % Per la gestione del layout della pagina
 \usepackage{hyperref} % Per i collegamenti ipertestuali
-\usepackage[utf8]{inputenc} % Per la codifica dei caratteri
-\usepackage[T1]{fontenc} % Per la codifica dei font
 \usepackage[italian]{babel} % Lingua italiana
 \usepackage{tikz} % Per disegnare grafici e diagrammi
 \usetikzlibrary{3d} % Libreria TikZ per grafici 3D
-\usepackage{mathrsfs} % Per lettere calligrafiche
 \usepackage[table]{xcolor} % Per colorare le tabelle
-\usepackage{matlab} % Per l'inserimento di codice MATLAB
+\usepackage{matlab-prettifier} % Per l'inserimento di codice MATLAB
 \usepackage{makeidx}
+\usepackage{mathrsfs} % Per lettere calligrafiche
+\usepackage{appendix}
+\usepackage{float}
+
 
 % Definizioni personalizzate
 \newtheorem{proposition}{Proposizione}
@@ -19,29 +20,29 @@
 \newtheorem{corollary}{Corollario}
 \newtheorem{lemma}{Lemma}
 \newtheorem{definition}{Definizione}
-\newcommand{\oss}{\textit{Osservazione: }}
-\newcommand{\R}{\mathbb{R}} % Simbolo per i numeri reali
+\newtheorem{oss}{\textit{Osservazione}}
+\newcommand{\R}{\mathbb{R}} 
 
-\sloppy
-\makeindex
 
 \begin{document}
 
 \title{Tesi}
 \author{Federico Riva\\Ingegneria Matematica\\Politecnico di Milano}
-\title{SVD}
+\title{SVD e DMD}
 \date{Relatore: Professor Marco Verani}
-
 \maketitle
+\begin{abstract} 
+Questo lavoro tratta alcuni risultati teorici inerenti la fattorizzazione a valori singolari di una matrice e introduce alcuni possibili applicazioni. Si approfondisce in particolare la dynamic mode decomposition applicandola al modello pandemico SEIRD precedentemente risolto con il metodo alle differenze finite. 
+\end{abstract}
 \newpage
 \tableofcontents
 \newpage
-\section{Decomposizione SVD}
+\section{SVD - Singular Value Decomposition}
 \subsection{Introduzione}
-La decomposizione SVD è una fattorizzazione algebrica che consente di rappresentare una matrice come il prodotto di tre matrici ciascuna con caratteristiche specifiche. Le applicazioni di questo metodo possono essere ritrovate in una vasta gamma di campi tra cui l'analisi dei dati, il machine learning e l'elaborazione delle immagini.
+La decomposizione SVD, Singular Value Decomposition, è una fattorizzazione algebrica che consente di rappresentare una matrice come il prodotto di tre matrici ciascuna delle quali con caratteristiche specifiche. Le applicazioni di questo metodo possono essere ritrovate in una vasta gamma di campi tra cui l'analisi dei dati, il machine learning e l'elaborazione delle immagini.
 
 \subsection{Premessa Teorica}
-Prima di entrare nel vivo della trattazione della fattorizzazione SVD della matrici è necessario fornire una serie di definizioni, Teoremi e proposizioni preliminari utili per la comprensione dei passaggi che seguiranno.
+Prima di entrare nel vivo della trattazione della fattorizzazione SVD della matrici è necessario fornire una serie di definizioni, teoremi e proposizioni preliminari utili per la comprensione dei passaggi che seguiranno.
 \begin{definition}
     \textbf{Matrice Ortogonale}\\ Una matrice quadrata $Q\in\mathbb{R}^{n \times n}$ si dice ortogonale se $Q^\top      Q=I$.
 \end{definition}
@@ -57,11 +58,12 @@ Prima di entrare nel vivo della trattazione della fattorizzazione SVD della matr
     p(x)=p(x_1,\dots,x_n)=\sum_{1 \leq i,j \leq n}a_{ij}x_ix_j=a_{11}x_1^2+a_{12}x_1x_2 + \dots + a_{nn-1}x_nx_{n-1}+a_{nn}x_n^2=\mathbf{x}^\top      A\mathbf{x}
     \]
     dove $\mathbf{x} = (x_1, \dots, x_n)$ e $A$ è una matrice simmetrica di dimensione $n \times n$.
-\end{definition}
+\end{definition} \noindent
+Dimostriamo ora una semplice proprietà del prodotto fra matrici fondamentale per quanto  discuteremo in seguito. 
 \begin{proposition}\label{prop 1}
 \textbf{}\\
 \textit{Hp:} Data una qualsiasi $M\in\mathbb{R}^{m \times n}$\\
-\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e definite positive.
+\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e semidefinite positive.
 \end{proposition}
 \begin{proof}
 1) Vogliamo dimostrare che $D=D^\top      $. Segue quindi dalle proprietà di trasposizione del prodotto di due matrici: $D^\top      =(M^\top      M)^\top      =M^\top  (M^\top)^\top =M^\top M   =D$. Si dimostra in maniera analoga il risultato per $S$.\\
@@ -69,16 +71,17 @@ Prima di entrare nel vivo della trattazione della fattorizzazione SVD della matr
 $$ \forall \mathbf{x}\neq 0: \mathbf{x} \in \R^n$$ $$\mathbf{x}^\top      A^\top      A\mathbf{x}=(A\mathbf{x})^\top      (A\mathbf{x})= \|A\mathbf{x}\|^2\geq 0$$
 \end{proof}
 \noindent
-\textit{Osservazione}: Poiché gli autovalori che otteniamo sono $\geq$ 0 possiamo calcolarne la radice quadrata.
+\begin{oss}: Una proprietà fondamentale che segue dalla definizione di matrice semidefinita positiva è che gli autovalori ad essa associati sono \(\geq 0\); possiamo quindi calcolarne la radice quadrata.
+\end{oss}
 \begin{proposition}\label{prop 2}
 \textbf{}\\
-\textit{Hp:} Sia $A \in \R^{m \times n}$ con $m \geq n$ con $\{\lambda_i(A^\top A)\}_{i=1}^{n}$ e $\{\lambda_j(A A^\top)\}_{j=1}^{m} $ \\
-\textit{Ts:}  $ \{\lambda_i(A^\top A)\}_{i=1}^{n} \subset \{\lambda_j(A A^\top)\}_{j=1}^{m} $ .
+\textit{Hp:} Sia $A \in \R^{m \times n}$ con $m \geq n$ e $\{\lambda_i(A^\top A)\}_{i=1}^{n}$ e $\{\lambda_j(A A^\top)\}_{j=1}^{m} $ gli autovalori di ciascuna matrice quadrata \\
+\textit{Ts:} $ \{\lambda_i(A^\top A)\}_{i=1}^{n} \subset \{\lambda_j(A A^\top)\}_{j=1}^{m} $ .
 \end{proposition}
 \begin{proof}
-Ipotizziamo che la coppia autovalori autovettore $(\mathbf{x},\lambda)$ sia associata alla matrice $A^\top      A$. Possiamo quindi scrivere $$A^\top      A\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^\top      A\mathbf{x}=\lambda A\mathbf{x}$$
+Ipotizziamo che la coppia autovalori-autovettore $(\mathbf{x_i},\lambda_i) \ \forall i=1,\dots,n$ sia associata alla matrice $A^\top      A$. Possiamo quindi scrivere $$A^\top      A\mathbf{x}=\lambda\mathbf{x}$$ e moltiplicando ambo i membri per $A$ otteniamo$$AA^\top      A\mathbf{x}=\lambda A\mathbf{x}$$
 Ma allora definendo $\mathbf{y}=A\mathbf{x}$ possiamo riscrivere $$AA^\top      \mathbf{y}=\lambda \mathbf{y}$$
-Il che conclude la dimostrazione poiché prova che  $\lambda$ è un autovalore anche della matrice $AA^\top      $. 
+il che conclude la dimostrazione poiché prova che la coppia $(\mathbf{y_i},\lambda_i) \ \forall i=1,\dots,n$ è una coppia autovalore-autovettore anche della matrice $AA^\top$. 
 \end{proof}
 
 \begin{corollary}\label{cor 1}
@@ -86,28 +89,67 @@ Il che conclude la dimostrazione poiché prova che  $\lambda$ è un autovalore a
 \textit{Hp:} Sia $M \in \R^{n \times n}$ con autovalori $\mathbf{\lambda}=[\lambda_1, \dots, \lambda_n ]$\\
 \textit{Ts:} Gli autovalori di $M^\top      M \ \text{e} \ MM^\top      $ sono gli stessi e valgono $\mathbf{\lambda}^2=[\lambda_1^2, \dots, \lambda_n^2 ]$
 \end{corollary}
-\begin{proof}
-\textbf{Proposizione \ref{prop 2}} nel caso particolare $A=M$
+\begin{proof} Per ricavare la tesi sfruttiamo la \textbf{Proposizione \ref{prop 2}} nel caso particolare $A=M$ unita alla definizione di autovalore.
 \end{proof}
-
+\begin{definition} \textbf{Matrice Diagonalizzabile} \\
+Una matrice quadrata \(A \in \mathbb{R}^{n \times n}\) è detta diagonalizzabile su \(\R \) se esistono una matrice diagonale \(D\) e una matrice quadrata reale e invertibile \(P\) tali che:
+\[
+A = P D P^{-1}
+\]
+In particolare siamo sicuri che una matrice sia diagonalizzabile se e solo se:
+\begin{itemize}
+\item \(D\) è una matrice diagonale contenente gli autovalori di \(A\) lungo la diagonale principale.
+\item \(P\) è una matrice le cui colonne sono gli autovettori di \(A\)
+\end{itemize}
+\end{definition}
 \begin{theorem}\label{teo spetr}
 \textbf{Teorema Spettrale}\\
 \textit{Hp:} Data $Q\in\mathbb{R}^{n\times n}$ una matrice simmetrica\\
-\textit{Ts:} È ortogonalmente diagonalizzabile $Q=U^{-1}DU=U^\top      DU$
+\textit{Ts:} È ortogonalmente diagonalizzabile $Q=UDU^{-1}=UDU^\top$
 \end{theorem}
 \noindent
-Prendendo in considerazione le \textbf{Proposizioni \autoref{prop 1}}, \textbf{\autoref{prop 2}} ed il \textbf{Teorema \ref{teo spetr}} possiamo osservare che data una qualsiasi matrice $A$ è possibile costruire a partire da essa due matrici simmetriche ortogonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
+Prendendo in considerazione la \textbf{Proposizione \autoref{prop 1}} ed il \textbf{Teorema \ref{teo spetr}} possiamo osservare che data una qualsiasi matrice $A \in \R^{m \times n}$ è possibile costruire a partire da essa due matrici simmetriche ortogonalmente diagonalizzabili. Possiamo quindi fornire le seguenti definizioni.
 \begin{definition}
-	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinistra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^\top      =U^\top      D_lU$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
+	\textbf{Vettori Singolari di sinistra}\\ I vettori singolari di sinistra di $A$ sono gli autovettori $\mathbf{u_1, \dots ,u_m}$ di $AA^\top  =U  D_lU^\top$ e compongono la \textit{Matrice Singolare di Sinistra} $U$.
 \end{definition}
 \begin{definition}
-	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^\top      A=V^\top      D_rV$ e compongono la \textit{Matrice Singolare di destra} $V$.
+	\textbf{Vettori Singolari di destra}\\ I vettori singolari di destra di $A$ sono gli autovettori $\mathbf{v_1, \dots ,v_n}$ di $A^\top  A=V D_rV^\top$ e compongono la \textit{Matrice Singolare di destra} $V$.
+\end{definition}
+\begin{definition}\textbf{Valori Singolari}\\ 
+I valori singolari sono le radici quadrate degli autovalori non nulli di $A^\top      A$ e $A^\top  A$ e li indicheremo con	$\sigma_1 \geq \dots \geq \sigma_{r \leq \min\{n,m\}} \geq 0$. Nel caso in cui sia \(n \leq m \) e  tutti gli autovalori della matrice \(n \times n\) siano non nulli allora $r=n=\min{\{m,n\}}$.
+\end{definition} 
+\noindent
+Introduciamo ora alcune nozioni sulle norme matriciali che adopereremo per discutere alcuni risultati di approssimazione.
+Dal momento che $\R^{m \times n}$ è isomorfo a $\R^{mn}$ la norma di una matrice è equivalente alla norma di un vettore. 
+\begin{definition}
+	\textbf{Norma}\\ Una funzione f: $\R^{m \times n} \rightarrow \R$ è detta norma se soddisfa le seguenti proprietà
+	\begin{itemize}
+		\item $f(A) \geq 0 \ \forall A\in \R^{m \times n} \ \text{e} \  f(A)=0 \iff A=0 $
+		\item $f(A+B)\leq f(A)+f(B)\  \, \forall A,B \in \R^{m \times n}$ 
+		\item $f(\alpha A)=|\alpha|f(A), \ \ \alpha \in \R, A \in \R^{m \times n}$
+	\end{itemize}
+Useremo quindi la notazione $\|A\|=f(A)$ per indicare la 'norma della matrice A'. 
+\end{definition}
+\noindent 
+Fra le numerose norme esistenti le due più frequenti sono:
+\begin{definition}
+\textbf{Norma di Frobenius}\\
+$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}=\sqrt{\sum_j^n \|\mathbf{a}_j\|_2^2}= \sqrt{\sum_i^m \|\mathbf{\tilde{a}}_i\|_2^2}$$ dove se \(A \in \R^{m \times n}\) allora \(\mathbf{a}_j \in \R^m \ \forall \ j=1, \dots, n \) e \(\mathbf{\tilde{a}}_i \in R^n \ \forall \ i=1, \dots,m \) 
 \end{definition}
 \begin{definition}
-	\textbf{Valori Singolari}\\ I valori singolari sono le radici quadrate degli autovalori non nulli di $A^\top      A$ e $A^\top      A$\\ $\sigma_1 \geq \dots \geq \sigma_{r=\min{n,m}} \geq 0$. Indicheremo con $r$ il numero di valori singolari che nel caso di assenza di autovalori nulli sarà $r=\min{\{m,n\}}$.
+\textbf{Norma p-esima}\\
+$$ \|A\|_p = \sup_{\mathbf{x} \neq 0} \frac{\|A\mathbf{x}\|_p}{\|\mathbf{x}\|_p}=\max_{\|\mathbf{x}\|_p =1} \|A\mathbf{x}\|_p
+$$
 \end{definition}
+\begin{proposition}\label{cons norm}
+\textbf{}\\
+\textit{Hp:} Data una matrice ortogonale $Q \in \R^{n \times n}$\\
+\textit{Ts:$\forall \mathbf{x}\in \R^n \ \|Q\mathbf{x}\|=\|\mathbf{x}\|$} 
+\end{proposition}
+\begin{proof} $\|Q\mathbf{x}\|^2 = (Q \mathbf{x})^\top      (Q \mathbf{x}) = \mathbf{x}^\top       Q^\top       Q \mathbf{x} = \mathbf{x}^\top      I\mathbf{x} = \mathbf{x}^\top      \mathbf{x} = \|\mathbf{x}\|^2$
+\end{proof}
 
-\subsection{Definizione}
+\subsection{Definizione della Fattorizzazione SVD}
 Sia $A\in\mathbb{R}^{m\times n}$, oppure equivalentemente $A\in\mathbb{C}^{m\times n}$, allora la decomposizione SVD della una matrice nel caso $m>n$ è definita come:
 
 \[
@@ -130,7 +172,7 @@ a_{m1} & a_{m2} & \cdots & a_{mn}
 0 & 0 & \cdots & 0
 \end{bmatrix} \mathbf{[v_1 \, v_2 \, \dots \, v_n]}^\top      
 \]
-Mentre per $m<n$:
+mentre per $m<n$:
 \[
 \begin{bmatrix}
 a_{11} & a_{12} & \cdots & a_{1n} \\
@@ -151,80 +193,85 @@ Dove:
     \item $\Sigma\in\mathbb{R}^{m\times n}$ è una matrice pseudodiagonale contenente i valori singolari di $A$ ordinati in modo decrescente,
     \item $V\in\mathbb{R}^{n\times n}$ è una matrice ortogonale contenente i vettori singolari destri di $A$.
 \end{itemize}
-
-\subsection{Legame fra la decomposizione SVD ed il Teorema Spettrale}
-Da un punto di vista intuitivo la fattorizzazione SVD può essere considerata come la generalizzazione del concetto di diagonalizzazione di una matrice quadrata; infatti se la seconda può essere applicata solamente a matrici quadrate $(n \times n)$ risulta valida per qualsiasi tipo di matrice $(m \times n)$ senza limite alcuno sulla sua forma.\\
-Se $A$ ammette la fattorizzazione SVD allora $A=U\Sigma V^\top      $ valgono le seguenti relazioni: $$A^\top      A=(U\Sigma V^\top      )^\top      U\Sigma V^\top      =V\Sigma^\top      U^\top      U\Sigma V^\top      =V\Sigma^\top       \Sigma V^\top      $$
-$$ AA^\top      =U\Sigma V^\top      (U\Sigma V^\top      )^\top      =\dots=U\Sigma \Sigma^\top       U^\top      $$ 
-Vale dunque un risultato ancora più specifico della semplice diagonalizzazione di una matrice ovvero il Teorema Spettrale
-
-\subsection{Interpretazione geometrica}
-Data una matrice $A \in \R^{m \times n}$ consideriamo l'applicazione lineare ad essa associata $$A: \R^n \rightarrow \R^m$$
-La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche descritte dalle 3 matrici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rappresentano una rotazione o una simmetria assiale, in generale una isometria, mentre la matrice $\Sigma$ è una dilatazione di intensità $\sigma_i$ lungo la componente $\mathbf{x}_i$ .Di seguito illustriamo visivamente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellise.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.85\textwidth,height=5.35cm]{geo.png}
-    \caption{Illustrazione in $\R^2$}
-    \label{fig:geo}
-\end{figure}
-\noindent \\
-Possiamo estendere questo ragionamento ad un caso più generale considerando una sfera di raggio unitario in $\R^n$ e l'ellissoide ad essa associata da $A \in \R^{m \times n}$ in $\R^m$.\\
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[scale=1.2]
-    % Prima figura - Sfera
-    \begin{scope}[shift={(0,0)}]
-        % Assi cartesiani
-        \draw[->] (0,0,0) -- (2,0,0) node[right] {$x$};
-        \draw[->] (0,0,0) -- (0,2,0) node[above] {$y$};
-        \draw[->] (0,0,0) -- (0,0,2) node[below left] {$z$};
-        
-        % Sfera
-        \shade[ball color = gray!40, opacity = 0.5] (0,0) circle (1);
-        
-        % Raggio della sfera
-        \draw[dashed, black] (0,0) -- (1,0) node[midway, below] {};
-        
-        % Vettori orientati nella sfera
-        \draw[-latex, red] (0,0) -- (1,0,0) node[below] {$\mathbf{v}_1$};
-        \draw[-latex, red] (0,0) -- (0,1,0) node[left] {$\mathbf{v}_2$};
-        \draw[-latex, red] (0,0) -- (0,0,1) node[below right] {$\mathbf{v}_3$};
-    \end{scope}
-    
-    % Seconda figura - Ellissoide
-    \begin{scope}[shift={(4,0)}]
-        % Assi cartesiani
-        \draw[->] (0,0,0) -- (2,0,0) node[right] {$x$};
-        \draw[->] (0,0,0) -- (0,2,0) node[above] {$y$};
-        \draw[->] (0,0,0) -- (0,0,2) node[below left] {$z$};
-        
-        % Definizione dell'ellissoide
-        \def\xRadius{1} % Modificato il semiasse x
-        \def\yRadius{1} % Modificato il semiasse y
-        \def\zRadius{1} % Modificato il semiasse z
-        
-        % Disegno dell'ellissoide
-        \begin{scope}[rotate around z=30,canvas is yz plane at x=0]
-            \shade[ball color = gray!40, opacity = 0.5] (0,0) ellipse (\yRadius cm and \yRadius cm);
-        \end{scope}
-         % Calcolo della posizione della punta dell'ellisse
-    \pgfmathsetmacro{\xEndPoint}{\xRadius*cos(30)}
-    \pgfmathsetmacro{\yEndPoint}{\xRadius*sin(30)}
-    \pgfmathsetmacro{\zEndPoint}{\zRadius}
-    
-    % Vettore nella punta dell'ellisse
-    \draw[-latex, blue] (0,0,0) -- (0.8,0.7,1) node[right] {$\mathbf{u_1}$};
-    \draw[-latex, blue] (0,0,0) -- (\xEndPoint,-\yEndPoint,\zEndPoint) node[right] {$\mathbf{u_2}$};
-    \draw[-latex, blue] (0,0,0) -- (-\xEndPoint,-\yEndPoint,-\zEndPoint)node[left] {$\mathbf{u_3}$};
-    \end{scope}
-\end{tikzpicture}
-\caption{Mappa da una sfera in $\R^n$ ad un'ellissoide in $\R^m$ nel caso particolare $n,m=3$.}
-\end{figure}
-\newpage
+Da un punto di vista intuitivo la fattorizzazione SVD può essere qundi considerata come la generalizzazione del concetto di diagonalizzazione di una matrice non quadrata (m×n), senza limite alcuno sulla sua dimensioni.\\
+Osserviamo infine che se $A$ ammette la fattorizzazione SVD allora $A=U\Sigma V^\top      $ valgono le seguenti relazioni: $$A^\top      A=(U\Sigma V^\top      )^\top      U\Sigma V^\top      =V\Sigma^\top      U^\top      U\Sigma V^\top      =V\Sigma^\top       \Sigma V^\top      $$
+$$ AA^\top      =U\Sigma V^\top      (U\Sigma V^\top      )^\top      =U\Sigma V^\top V \Sigma^\top       U^\top       = U\Sigma \Sigma^\top       U^\top      $$ 
+\begin{definition}\label{econ}\textbf{Fattorizzazione SVD ridotta}\\
+Sia $A$ una matrice $m \times n$ con rango $r$. La decomposizione ai valori singolari (SVD) ridotta di $A$ è data da $A = U' \Sigma' V'^\top$ dove:
+\[
+U' = 
+\begin{bmatrix}
+    | & | & & | \\
+    \mathbf{u}_1 & \mathbf{u}_2 & \cdots & \mathbf{u}_r \\
+    | & | & & |
+\end{bmatrix} \in \R^{m \times r}, \ 
+\Sigma' = 
+\begin{bmatrix}
+    \sigma_1 & 0 & \cdots & 0 \\
+    0 & \sigma_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & \sigma_r
+\end{bmatrix} \in \R^{r \times r} \ \text{e} \
+V'^\top       = 
+\begin{bmatrix}
+    - & \mathbf{v}_1^\top       & - \\
+    - & \mathbf{v}_2^\top       & - \\
+    & \vdots & \\
+    - & \mathbf{v}_r^\top       & - \\
+\end{bmatrix} \in \R^{r \times n}
+\]
+\end{definition}
+\subsection{Dimostrazione della decomposizione SVD }
+\begin{theorem}\label{svd}
+\textbf{Decomposizione a valori singolari}\\
+\textit{Hp:} Sia $A \in \R^{m \times n}$ e $\text{Rg}(A)=r$. \\
+\textit{Ts:} Esistono una matrice pseudodiagonale $\Sigma \in \R^{m \times n}$ con $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ e due matrici ortogonali $U$ e $V$ tali che possiamo riscrivere la matrice $A$ come $A=U\Sigma V^\top$. Tale decomposizione di dice decomposizione ai valori singolari di $A$, non è unica, ma in ogni decomposizione siffatta gli elementi non nulli $\sigma_k$ di $\Sigma$ sono i valori singolari di $A$. 
+\end{theorem}
+\begin{proof}
+Data una matrice $A \in \R^{m \times n}$ poiché $A^\top      A \in \R^{n \times n}$ è simmetrica e semidefinita positiva segue dal Teorema Spettrale che $\exists$ una matrice ortonormale $V \in \R^{n \times n}$ tale che $$ A^\top      A=V\bar{D}V^\top      $$ e a sua volta poiché $V^{-1}=V^\top      $ $$V^\top      A^\top      AV=\bar{D}= \begin{bmatrix}D & 0 \\ 0 & 0\end{bmatrix}$$
+dove $D \in \R^{\ell \times \ell}$ è una matrice diagonale e positiva di dimensione con $\ell \leq \min{\{m,n\}}$ il numero di autovalori non nulli della matrice $A^\top      A$. 
+Osserviamo che per definizione di autovalori e autovettori la $i-esima$ colonna di $V$ corrisponde all' $i-esimo$ autovalore $\bar{D}_{ii}$. Di conseguenza possiamo individuare $V_1=[\mathbf{v}_1 \, \dots \, \mathbf{v}_{\ell}] \in \R^{n \times \ell}$ e $V_2=[\mathbf{v}_{\ell+1} \, \dots \, \mathbf{v}_n] \in \R^{n \times n-\ell}$ tali che $V=[V_1 \, V_2]$ che sono rispettivamente gli autovettori associati ad autovalori non nulli e nulli. 
+Possiamo quindi riscrivere l'equazione come:
+$$ \begin{bmatrix} V_1^\top       \\ V_2^\top       \end{bmatrix}
+A^\top      A \begin{bmatrix} V_1 & \!\! V_2 \end{bmatrix}
+= \begin{bmatrix}  V_1^\top      A^\top      AV_1 & V_1^\top      A^\top      AV_2 \\
+  V_2^\top      A^\top      AV_1 & V_2^\top      A^\top      AV_2
+\end{bmatrix} = \begin{bmatrix} D & 0 \\ 0 & 0 \end{bmatrix}$$
+Da cui ricaviamo le seguenti equazioni:
+$$V_1^\top      A^\top      AV_1=D \ \ \text{e} \ \ V_2^\top      A^\top      AV_2=0$$ 
+Siamo quindi in grado di risolvere la seconda
+$$\|AV_2\|_2=0 \Rightarrow AV_2=0$$ 
+Costruiamo inolte le seguenti matrici di diverse dimensioni che torneranno utili in seguito:\\
+\begin{itemize}
+	\item$V_1^\top      V_1=I_{\ell}$ dove $(\ell \times n)\times(n \times \ell)=(\ell \times \ell)$
+	\item$V_2^\top      V_2=I_{n-\ell}$ dove $(n-\ell \ \times n)\times(n \times \ n-\ell)=(n-\ell \times n-\ell)$
+	\item$[V_1 V_2][V_1 V_2]^\top      =V_1V_1^\top      +V_2V_2^\top      =I_n$ dove\\
+ 	$$(n \times \ell)\times(\ell \times n)=(n \times n) \ \text{e} \ (n \times n-\ell)\times(n-\ell \times  n)=(n \times n)$$
+\end{itemize}
+Definiamo ora la matrice $U_1$ come: $$U_1 = A V_1 D^{-\frac{1}{2}} \in \R^{m \times \ell}\ \lbrace(m \times \ell)=(m \times n)\times(n \times \ell)\times(\ell \times \ell)\rbrace$$ sapendo che $D^{-\frac{1}{2}}$ è ben definita poiché $D_{ii} > 0$ $\forall \ i = 1, \dots, \ell$.\\
+Invertendo la relazione e sostituendo $U_1$: $$A=U_1D^{\frac{1}{2}}V_1^\top      =AV_1D^{-\frac12}D^{\frac12}V_1^\top      =AV_1V_1^\top      $$ e sfruttando $V_1V_1^\top      +V_2V_2^\top      =I_n$ e $AV_2=0$  otteniamo: $$A=A\left( I -V_2V_2^\top       \right)=A-AV_2V_2^\top      =A-0=A$$ il che stabilisce la coerenza dalla definizione di $U_1$ proposta.\\
+Abbiamo quindi quasi dimostrato il risultato completo, non ci resta che verificare che le colonne della matrice $U_1$ formino una base ortonormale: $$ U_1^\top      U_1=D^{-\frac12}V_1^\top      A^\top      AV_1D^{-\frac12}=D^{-\frac12}DD^{-\frac12}=I_{\ell} \in \R^{\ell \times \ell} $$
+Possiamo quindi costruire il complemento ortogonale di $U_1$ ovvero $U_2=\text{Span}(\text{Col}(U_1)^\perp) \in \R^{m \times n-\ell}$ in modo che $U=[U_1 \ U_2] \in \R^{m \times m}$ sia una matrice ortogonale.\\
+Per concludere aggiungiamo un numero opportune di righe e colonne nulle alla matrice $D^{\frac12} \in \R^{\ell \times \ell}$ in modo da creare: $$\Sigma=\begin{bmatrix}
+  \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
+  0
+\end{bmatrix} \in \R^{m \times n}$$
+Allora sfruttando le proprietà del prodotto matriciale fra matrici a blocchi: 
+$$U\Sigma V^\top      = [U_1 \ U_2]\begin{bmatrix}
+  \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
+  0
+\end{bmatrix}[V_1 \ V_2]^\top      = \begin{bmatrix} U_1 & U_2 \end{bmatrix}
+\begin{bmatrix} D^\frac{1}{2}V_1^\top       \\ 0 \end{bmatrix}
+= U_1 D^\frac{1}{2} V_1^\top       = A $$
+\end{proof}
 \noindent
-Notiamo che le matrici $U$ e $V$ sono unitarie e le colonne di ciascuna formano una base di vettori ortonormali. Inoltre la matrice $A$ mappa il $v_i$ elemento della base in nel vettore dilatato $\sigma_iu_i$.
-\noindent
-Verifichiamolo:
+Enunciamo ora una serie di corollari che seguono dalla dimostrazione della fattorizzazione SVD.
+\begin{corollary}\label{scomp}
+\textbf{}\\
+\textit{Hp:} Sia $U^\top      AV=\Sigma$ la decomposizione SVD della matrice $A\in \R^{m \times n}$ con $m \geq n$. \\
+\textit{Ts:} $\forall i=1, \dots ,n \ A \mathbf{v}_i= \sigma_i \mathbf{u}_i \ \text{e} \ A^\top \mathbf{u}_i = \sigma_i \mathbf{v}_i$  
+\end{corollary}
+\begin{proof}
 \[
 A = U\Sigma V^\top       
 \]
@@ -241,10 +288,94 @@ Tenendo conto che
 Otteniamo
 $$\forall i=1,\dots,n\ A\mathbf{v_i}=\sigma_i\mathbf{u_i}
 $$
-Possiamo quindi scrivere più in generale che:  $A\mathbf{v}=\sigma\mathbf{u}$ e $A^\top      \mathbf{u}=\sigma\mathbf{v}$.\\
-\\
-Studiamo ora le relazioni che sussistono fra gli spazi vettoriali associati alle colonne della matrice $A$ e delle matrici di decomposizione $U$ e $V$. Per farlo avremo bisogno di qualche risultato teorico pregresso.\\
-\textit{Osservazione:} $\text{Span}(A)=\text{Col}(A)$ e quindi $\text{Span}(A^\top      )=\text{Col}(A^\top      )=\text{Row}(A)$.
+Analogamente si dimostra il risultato per $A^\top       \mathbf{u}_i = \sigma_i \mathbf{v}_i$
+\end{proof}
+
+\begin{corollary}\label{norma}
+\textbf{}\\
+\textit{Hp:} Sia $A\in \R^{m \times n}$ con $m \geq n$ \\
+\textit{Ts:} $\|A\|_2=\sigma_1 \text{e} \  \|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$
+\end{corollary}
+\begin{proof}
+1) \[ \|A\|_2 = \max_{\|\mathbf{x}\|_2 =1} \|A\mathbf{x}\|_2 = \max_{\|\mathbf{x}\|_2 =1} \| U \Sigma V^\top       \mathbf{x} \|_2 \]
+Dalla \textbf{Proposizione \ref{cons norm}} sappiamo che le due matrici ortogonali $U$ e $V$ non modificano la norma. Possiamo quindi riscrivere l'uguaglianza come $$\max_{\|\mathbf{x}\|_2 =1} \|\Sigma \mathbf{x}\|_2 $$ cioè $$\max_{\|\mathbf{x}\|_2 =1} \begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r \\
+0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0
+\end{bmatrix} \begin{bmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_n
+\end{bmatrix}$$ 
+e poiché $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ otteniamo il massimo per $\mathbf{x}=[1 \ 0 \dots 0]^\top      $ ovvero $\|A\|_2= \sigma_1$
+\\2)$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|(U\Sigma V^\top      )_{ij}|^2}$$
+scrivendo il prodotto matriciale elemento per elemento otteniamo che $$(U\Sigma V^\top      )_{ij} = \sum_{k=1}^{r} U_{ik} \Sigma_{kk} (V^\top      )_{kj}=\sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}$$
+$$ \|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n \sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}} $$ 
+Tuttavia per costruzione della matrice $\Sigma$ $$\Sigma_{kk}=\sigma_k \geq 0 \ \forall k=1,\dots,r \ \text{con} \ r\leq n=\min{\{m,n\}} \ \text{e} \ \Sigma_{ij}=0 \ \forall i=1, \dots, m \ \text{e} \ \forall j=1, \dots, n$$
+Otteniamo la tesi $$\|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$$
+\end{proof}
+
+\begin{corollary}\label{sum matr}
+\textit{Hp:} Sia $A,E \ \in \R^{m \times n}$\\
+\textit{Ts:} $\sigma_{max}(A+E) \leq \sigma_{max}(A) + \|E\|_2 \ \text{e} \ \sigma_{min}(A+E) \geq \sigma_{min}(A) - \|E\|_2$ 
+\end{corollary}
+\begin{proof}
+Dal \textbf{Corollario \ref{norma}}  segue che $$\sigma_{min}(A)\|\mathbf{x}\|_2 \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)\|\mathbf{x}\|_2$$
+e scegliendo un vettore $\mathbf{x}=1$ otteniamo che
+\[
+\sigma_{min}(A) \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)
+\]
+Applicando questo risultato al nostro caso e la proprietà subaddittività della norma otteniamo
+$$ \sigma_{min}(A) - \|E\|_2 \leq \|A\|_2 - \|E\|_2 \leq \|A+E\|_2 \leq \|A\|_2 + \|E\|_2 = \sigma_{max}(A) + \|E\|_2  $$
+da cui la tesi. 
+\end{proof}
+
+\begin{corollary}\label{add col}
+\textbf{}\\
+\textit{Hp:} Sia $A \in \R^{m \times n} \ \text{e} \ \mathbf{z}\in \R^m$\\
+\textit{Ts:} $\sigma_{max}([A \, z]) \geq \sigma_{max}(A)$ e $\sigma_{min}([A \, z]) \leq \sigma_{min}(A)$
+\end{corollary}
+\begin{proof}
+Sia $A=U\Sigma V^\top      $ la decomposizione SVD di $A$ e consideriamo il vettore $\mathbf{x}= \mathbf{v}_1$, ottenuto dalla prima colonna della matrice $V$, e la matrice $\bar{A} = [A \, \mathbf{z}] \in \R^{m \times n+1}$. Sfruttando il \textbf{Corollario \ref{sum matr}} otteniamo
+\[
+\sigma_{max}(A)=\| A \mathbf{x} \|_2=\|\bar{A} \mathbf{\begin{bmatrix} x \\0 \end{bmatrix}}  \|_2 \leq \sigma_{max}(\bar{A})
+\]
+Analogmaente si dimostra che $\sigma_{min}(A) \geq \sigma_{min}(\bar{A}) $
+\end{proof}
+\noindent
+\subsection{Proprietà della Fattorizzazione SVD}
+Per prima cosa cerchiamo di fornire un'interpretazione intuitiva della fattorizzazione SVD dal punto di vista geometrico. 
+Data una matrice $A \in \R^{m \times n}$ consideriamo l'applicazione lineare ad essa associata $$A: \R^n \rightarrow \R^m$$
+La fattorizzazione SVD scopone la trasformazione lineare in 3 trasformazioni geometriche descritte dalle matrici $U$,$V$ e $\Sigma$ dove le matrici ortonormali rappresentano un'isometria, sia essa una rotazione o una simmetria assiale, mentre la matrice $\Sigma$ è una dilatazione di \textit{intensità} $\sigma_i$ lungo la componente $\mathbf{u}_i$; ricordiamo che per il \textbf{Corollario \ref{scomp}} $A$ mappa il $v_i$ elemento della base in nel vettore dilatato $\sigma_iu_i$. Di seguito illustriamo visivamente lo specifico caso $A \in \R^{2 \times 2}$ nel caso di una circonferenza di raggio unitario che viene mappata in un'ellissi.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth,height=5.35cm]{Images/geo.png}
+    \caption{Illustrazione in $\R^2$}
+    \label{fig:geo}
+\end{figure} 
+\noindent
+Possiamo estendere questo ragionamento ad un caso più generale considerando una sfera di raggio unitario in $\R^n$ e l'ellissoide ad essa associata da $A \in \R^{m \times n}$ in $\R^m$.\\
+Queste osservazioni che a prima vista possono sembrare una mera curiosità illustrativa nascondono al loro interno un significato molto più profondo con importantissimi risvolti pratici nell'ambito della matematica numerica. 
+\begin{definition}\textbf{Numero di Condizionamento di una Matrice}\\
+Si definisce numero di condizionamento di \( A \in \R^{ n \times n } \) la quantità 
+\[ K(A) = \|A\| \|A^{-1} \| \]
+in particolare \[ K_2(A) = \|A\|_2 \|A^{-1} \|_2 = \frac{\lambda_{max}}{\lambda_{min}}\]
+Nel caso più generale di una matrice \(A \in \R^{m \times n} \) \(\ K_2(A) = \|A\|_2 \|A^{-1} \|_2 = \frac{\sigma_{1}}{\sigma_{n}}\)
+\end{definition}
+Il numero di condizionamento di una matrice, indipendentemente dalla sua dimensione, è definito come il rapporto tra il semiasse maggiore e il semiasse minore dell'ellisse associato all'immagine della matrice \(A\). Da un punto di vista applicativo, esso misura la sensibilità della soluzione di un sistema lineare rispetto a variazioni nei dati di input, quantificando l'impatto di piccole perturbazioni nei coefficienti della matrice o nei termini noti sulla soluzione del sistema. Una matrice con un basso numero di condizionamento è ben condizionata, indicando soluzioni stabili rispetto a perturbazioni dei dati. Al contrario, una matrice con un alto numero di condizionamento è mal condizionata, suggerendo che piccole variazioni nei dati possono causare grandi cambiamenti nella soluzione.
+Notiamo quindi la relazione fra la \textit{dilazione} della base dello Span e la propagazione dell'errore in un metodo numerico per la risoluzione un sistema lineare. \\
+Studiamo ora le relazioni che sussistono fra gli spazi vettoriali associati alle colonne della matrice $A$ e delle matrici di decomposizione $U$ e $V$; per farlo avremo bisogno di qualche ulteriore risultato teorico.
+\begin{definition} \textbf{Spazio Vettoriale Generato dalle Colonne di una Matrice}\\
+Definiamo lo spazio vettoriale generato dall'insieme delle colonne della matrice \(A\) come tutte le possibili combinazioni lineari ottenute dai vettori colonna e lo indichiamo \(\text{Span}(A) = \text{Col}(A)\). Analogamente, lo spazio vettoriale generato dalle righe della matrice \(A\) è dato da \(\text{Row}(A) = \text{Span}(A^\top) = \text{Col}(A^\top) \).
+\end{definition}
+\begin{definition}\textbf{Nulceo di una matrice}\\
+Data una matrice \(A \in \R^{m \times n} \) indichiamo con Ker \((A)= \{ \mathbf{v} \in \R^n: A\mathbf{v}=0 \}\) 
+\end{definition}
 \begin{proposition}
 \textbf{}\\
 \textit{Hp:} Per ogni matrice $A \in \R^{m \times n}$ valgono le seguenti relazioni\\
@@ -252,10 +383,9 @@ Studiamo ora le relazioni che sussistono fra gli spazi vettoriali associati alle
 \end{proposition}
 \begin{theorem}\label{null}
 \textbf{Teorema di Nullità più rango}\\
-\textit{Hp:} Sia $A\in \R^{m \times n}$ con Rg($A$)=$r$\\
-\textit{Ts:} dim Ker($A$)=$n-r$
+\textit{Hp:} Sia $A\in \R^{m \times n}$ con \(Rg(A)=r\)\\
+\textit{Ts:} dim \(Ker(A)=n-r\)
 \end{theorem}
-\noindent
 \begin{proposition}\label{prop gal}
 \textbf{}\\
 \textit{Hp:} $\forall A \in \R^{m \times n}$ valgono le seguenti uguaglianze\\
@@ -339,174 +469,14 @@ e quindi $\text{Ker}(A^\top      )=\text{Span}([\mathbf{u}_{m-r} \, \dots \, \ma
 Analogamente a 1. e 2. sfruttando le proprietà della trasposizione del prodotto matriciale
 \end{proof}
 
-\subsection{Dimostrazione della decomposizione SVD e Teorema Eckart-Young}
-\begin{theorem}\label{svd}
-\textbf{Decomposizione a valori singolari}\\
-\textit{Hp:} Sia $A \in \R^{m \times n}$ e $\text{Rg}(A)=r$. \\
-\textit{Ts:} Esistono una matrice pseudodiagonale $\Sigma \in \R^{m \times n}$ con $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ e due matrici ortogonali $U$ e $V$ tali che possiamo riscrivere la matrice $A$ come $A=U\Sigma V^\top$. Tale decomposizione di dice decomposizione ai valori singolari di $A$, non è unica, ma in ogni decomposizione siffatta gli elementi non nulli $\sigma_k$ di $\Sigma$ sono i valori singolari di $A$. 
-\end{theorem}
-\subsubsection{Dimostrazione}
-Data una matrice $A \in \R^{m \times n}$ poiché $A^\top      A \in \R^{n \times n}$ è simmetrica e semidefinita positiva segue dal Teorema Spettrale che $\exists$ una matrice ortonormale $V \in \R^{n \times n}$ tale che $$ A^\top      A=V\bar{D}V^\top      $$ e a sua volta poiché $V^{-1}=V^\top      $ $$V^\top      A^\top      AV=\bar{D}= \begin{bmatrix}D & 0 \\ 0 & 0\end{bmatrix}$$
-dove $D \in \R^{\ell \times \ell}$ è una matrice diagonale e positiva di dimensione con $\ell \leq \min{\{m,n\}}$ il numero di autovalori non nulli della matrice $A^\top      A$. 
-Osserviamo che per definizione di autovalori e autovettori la $i-esima$ colonna di $V$ corrisponde all' $i-esimo$ autovalore $\bar{D}_{ii}$. Di conseguenza possiamo individuare $V_1=[\mathbf{v}_1 \, \dots \, \mathbf{v}_{\ell}] \in \R^{n \times \ell}$ e $V_2=[\mathbf{v}_{\ell+1} \, \dots \, \mathbf{v}_n] \in \R^{n \times n-\ell}$ tali che $V=[V_1 \, V_2]$ che sono rispettivamente gli autovettori associati ad autovalori non nulli e nulli. 
-Possiamo quindi riscrivere l'equazione come:
-$$ \begin{bmatrix} V_1^\top       \\ V_2^\top       \end{bmatrix}
-A^\top      A \begin{bmatrix} V_1 & \!\! V_2 \end{bmatrix}
-= \begin{bmatrix}  V_1^\top      A^\top      AV_1 & V_1^\top      A^\top      AV_2 \\
-  V_2^\top      A^\top      AV_1 & V_2^\top      A^\top      AV_2
-\end{bmatrix} = \begin{bmatrix} D & 0 \\ 0 & 0 \end{bmatrix}$$
-Da cui ricaviamo le seguenti equazioni:
-$$V_1^\top      A^\top      AV_1=D \ \ \text{e} \ \ V_2^\top      A^\top      AV_2=0$$ 
-Siamo quindi in grado di risolvere la seconda
-$$\|AV_2\|_2=0 \Rightarrow AV_2=0$$ 
-Costruiamo inolte le seguenti matrici di diverse dimensioni che torneranno utili in seguito:\\
-\begin{itemize}
-	\item$V_1^\top      V_1=I_{\ell}$ dove $(\ell \times n)\times(n \times \ell)=(\ell \times \ell)$
-	\item$V_2^\top      V_2=I_{n-\ell}$ dove $(n-\ell \ \times n)\times(n \times \ n-\ell)=(n-\ell \times n-\ell)$
-	\item$[V_1 V_2][V_1 V_2]^\top      =V_1V_1^\top      +V_2V_2^\top      =I_n$ dove\\
- 	$$(n \times \ell)\times(\ell \times n)=(n \times n) \ \text{e} \ (n \times n-\ell)\times(n-\ell \times  n)=(n \times n)$$
-\end{itemize}
-Definiamo ora la matrice $U_1$ come: $$U_1 = A V_1 D^{-\frac{1}{2}} \in \R^{m \times \ell}\ \lbrace(m \times \ell)=(m \times n)\times(n \times \ell)\times(\ell \times \ell)\rbrace$$ sapendo che $D^{-\frac{1}{2}}$ è ben definita poiché $D_{ii} > 0$ $\forall \ i = 1, \dots, \ell$.\\
-Invertendo la relazione e sostituendo $U_1$: $$A=U_1D^{\frac{1}{2}}V_1^\top      =AV_1D^{-\frac12}D^{\frac12}V_1^\top      =AV_1V_1^\top      $$ e sfruttando $V_1V_1^\top      +V_2V_2^\top      =I_n$ e $AV_2=0$  otteniamo: $$A=A\left( I -V_2V_2^\top       \right)=A-AV_2V_2^\top      =A-0=A$$ il che stabilisce la coerenza dalla definizione di $U_1$ proposta.\\
-Abbiamo quindi quasi dimostrato il risultato completo, non ci resta che verificare che le colonne della matrice $U_1$ formino una base ortonormale: $$ U_1^\top      U_1=D^{-\frac12}V_1^\top      A^\top      AV_1D^{-\frac12}=D^{-\frac12}DD^{-\frac12}=I_{\ell} \in \R^{\ell \times \ell} $$
-Possiamo quindi costruire il complemento ortogonale di $U_1$ ovvero $U_2=\text{Span}(\text{Col}(U_1)^\perp) \in \R^{m \times n-\ell}$ in modo che $U=[U_1 \ U_2] \in \R^{m \times m}$ sia una matrice ortogonale.\\
-Per concludere aggiungiamo un numero opportune di righe e colonne nulle alla matrice $D^{\frac12} \in \R^{\ell \times \ell}$ in modo da creare: $$\Sigma=\begin{bmatrix}
-  \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
-  0
-\end{bmatrix} \in \R^{m \times n}$$
-Allora sfruttando le proprietà del prodotto matriciale fra matrici a blocchi: 
-$$U\Sigma V^\top      = [U_1 \ U_2]\begin{bmatrix}
-  \begin{bmatrix} D^\frac{1}{2} & 0 \\ 0 & 0 \end{bmatrix} \\
-  0
-\end{bmatrix}[V_1 \ V_2]^\top      = \begin{bmatrix} U_1 & U_2 \end{bmatrix}
-\begin{bmatrix} D^\frac{1}{2}V_1^\top       \\ 0 \end{bmatrix}
-= U_1 D^\frac{1}{2} V_1^\top       = A $$\qed
+\textcolor{orange}{\subsection{Algoritmi per il Calcolo}}
 
-\subsubsection{Norme Matriciali e Proprietà}
-Introduciamo ora alcune nozioni sulle norme matriciali che adopereremo per discutere alcuni risultati di approssimazione.
-Dal momento che $\R^{m \times n}$ è isomorfo a $\R^{mn}$ la norma di una matrice è equivalente alla norma di un vettore. 
-\begin{definition}
-	\textbf{Norma}\\ Una funzione f: $\R^{m \times n} \rightarrow \R$ è detta norma se soddisfa le seguenti proprietà
-	\begin{itemize}
-		\item $f(A) \geq 0 \ \forall A\in \R^{m \times n} \ \text{e} \  f(A)=0 \iff A=0 $
-		\item $f(A+B)\leq f(A)+f(B)\  \, \forall A,B \in \R^{m \times n}$ 
-		\item $f(\alpha A)=|\alpha|f(A), \ \ \alpha \in \R, A \in \R^{m \times n}$
-	\end{itemize}
-Useremo quindi la notazione $\|A\|=f(A)$ per indicare la 'norma della matrice A'. 
-\end{definition}
-\noindent 
-Fra le numerose norme esistenti le due più frequenti sono:
-\begin{definition}
-\textbf{Norma di Frobenius}\\
-$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}$$
-\end{definition}
-\begin{definition}
-\textbf{Norma p-esima}\\
-$$ \|A\|_p = \sup_{\mathbf{x} \neq 0} \frac{\|A\mathbf{x}\|_p}{\|\mathbf{x}\|_p}=\max_{\|\mathbf{x}\|_p =1} \|A\mathbf{x}\|_p
-$$
-\end{definition}
-\begin{definition}
-\textbf{Norma $\infty$}\\
-$$\|A\|_\infty = \max_{1 \leq i \leq m} \sum_{j=1}^{n} |a_{ij}|$$
-\end{definition}
-\begin{proposition}\label{cons norm}
-\textbf{}\\
-\textit{Hp:} Data una matrice ortogonale $Q \in \R^{n \times n}$\\
-\textit{Ts:$\forall \mathbf{x}\in \R^n \ \|Q\mathbf{x}\|=\|\mathbf{x}\|$} 
-\end{proposition}
-\begin{proof} $\|Q\mathbf{x}\|^2 = (Q \mathbf{x})^\top      (Q \mathbf{x}) = \mathbf{x}^\top       Q^\top       Q \mathbf{x} = \mathbf{x}^\top      I\mathbf{x} = \mathbf{x}^\top      \mathbf{x} = \|\mathbf{x}\|^2$
-\end{proof}
-\noindent
-Enunciamo ora una serie di corollari che seguono dalla dimostrazione della fattorizzazione SVD.
-\begin{corollary}\label{cor 3}
-\textbf{}\\
-\textit{Hp:} Sia $U^\top      AV=\Sigma$ la decomposizione SVD della matrice $A\in \R^{m \times n}$ con $m \geq n$. \\
-\textit{Ts:} $\forall i=1, \dots ,n \ A \mathbf{v}_i= \sigma_i \mathbf{u}_i \text{e} A^\top       \mathbf{u}_i = \sigma_i \mathbf{v}_i$  
-\end{corollary}
-\begin{proof}
-Come abbiamo già discusso precedentemente nell'interpretazione geometrica:
-\[
-A = U\Sigma V^\top       
-\]
-\[
-AV = U\Sigma
-\]
-\[ 
-[A\mathbf{v_1} \, A\mathbf{v_2} \, \dots \, A\mathbf{v_n}] = [U\mathbf{\sigma_1} \, U\mathbf{\sigma_2} \, \dots \, U\mathbf{\sigma_n}]
-\]
-Tenendo conto che 
-\[
-\mathbf{\sigma_i}=[0 \, \dots \, 0 \, \sigma_i \, 0 \, \dots \, 0]
-\]
-Otteniamo
-$$\forall i=1,\dots,n\ A\mathbf{v_i}=\sigma_i\mathbf{u_i}
-$$
-Analogamente si dimostra il risultato per $A^\top       \mathbf{u}_i = \sigma_i \mathbf{v}_i$
-\end{proof}
+\newpage
+\section{Applicazioni della Singular Value Decomposition}
+La fattorizzazione SVD può essere applicata senza la necessità di ulteriori elementi per ottenere una sieri di risultati sia teorici che pratici. 
+Di seguito illustriamo in più famosi.
 
-\begin{corollary}\label{cor 4}
-\textbf{}\\
-\textit{Hp:} Sia $A\in \R^{m \times n}$ con $m \geq n$ \\
-\textit{Ts:} $\|A\|_2=\sigma_1 \text{e} \  \|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$
-\end{corollary}
-\begin{proof}
-1) \[ \|A\|_2 = \max_{\|\mathbf{x}\|_2 =1} \|A\mathbf{x}\|_2 = \max_{\|\mathbf{x}\|_2 =1} \| U \Sigma V^\top       \mathbf{x} \|_2 \]
-Dalla \textbf{Proposizione \ref{cons norm}} sappiamo che le due matrici ortogonali $U$ e $V$ non modificano la norma. Possiamo quindi riscrivere l'uguaglianza come $$\max_{\|\mathbf{x}\|_2 =1} \|\Sigma \mathbf{x}\|_2 $$ cioè $$\max_{\|\mathbf{x}\|_2 =1} \begin{bmatrix}
-\sigma_1 & 0 & \cdots & 0 \\
-0 & \sigma_2 & \cdots & 0 \\
-\vdots & \vdots & \ddots & \vdots \\
-0 & 0 & \cdots & \sigma_r \\
-0 & 0 & \cdots & 0 \\
-\vdots & \vdots & \ddots & \vdots \\
-0 & 0 & \cdots & 0
-\end{bmatrix} \begin{bmatrix}
-x_1 \\
-x_2 \\
-\vdots \\
-x_n
-\end{bmatrix}$$ 
-e poiché $\sigma_1 \geq \sigma_2 \geq \dots \geq \sigma_r \geq 0$ otteniamo il massimo per $\mathbf{x}=[1 \ 0 \dots 0]^\top      $ ovvero $\|A\|_2= \sigma_1$
-\\2)$$\|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|a_{ij}|^2}=\sqrt{\sum_{i=1}^m\sum_{j=1}^n|(U\Sigma V^\top      )_{ij}|^2}$$
-scrivendo il prodotto matriciale elemento per elemento otteniamo che $$(U\Sigma V^\top      )_{ij} = \sum_{k=1}^{r} U_{ik} \Sigma_{kk} (V^\top      )_{kj}=\sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}$$
-$$ \|A\|_F=\sqrt{\sum_{i=1}^m\sum_{j=1}^n \sum_{k=1}^{r} U_{ik} \Sigma_{kk}V_{jk}} $$ 
-Tuttavia per costruzione della matrice $\Sigma$ $$\Sigma_{kk}=\sigma_k \geq 0 \ \forall k=1,\dots,r \ \text{con} \ r\leq n=\min{\{m,n\}} \ \text{e} \ \Sigma_{ij}=0 \ \forall i=1, \dots, m \ \text{e} \ \forall j=1, \dots, n$$
-Otteniamo la tesi $$\|A\|_F=\sqrt{\sigma_1^2 + \dots + \sigma_r^2}$$
-
-\end{proof}
-\textcolor{orange}{
-\begin{corollary}\label{cor 5}
-\textbf{ DIMOSTRAZIONE DA CONTROLLARE }\\
-\textit{Hp:} Sia $A,E \ \in \R^{m \times n}$\\
-\textit{Ts:} $\sigma_{max}(A+E) \leq \sigma_{max}(A) + \|E\|_2 \ \text{e} \ \sigma_{min}(A+E) \geq \sigma_{min}(A) - \|E\|_2$ 
-\end{corollary}
-\begin{proof}
-Dal \textbf{Corollario \ref{cor 3}}  segue che $$\sigma_{min}(A)\|\mathbf{x}\|_2 \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)\|\mathbf{x}\|_2$$
-e scegliendo un vettore $\mathbf{x}=1$ otteniamo che
-\[
-\sigma_{min}(A) \leq \|A\mathbf{x}\|_2 \leq \sigma_{max}(A)
-\]
-Applicando questo risultato al nostro caso e la definizione di norma otteniamo
-$$ \sigma_{min}(A) - \|E\|_2 \leq \|A\|_2 - \|E\|_2 \leq \|A+E\|_2 \leq \|A\|_2 + \|E\|_2 = \sigma_{max}(A) + \|E\|_2  $$
-da cui la tesi. 
-\end{proof}
-}\textcolor{orange}{
-\begin{corollary}\label{cor 6}
-\textbf{}\\
-\textit{Hp:} Sia $A \in \R^{m \times n} \ \text{e} \ \mathbf{z}\in \R^m$\\
-\textit{Ts:} $\sigma_{max}([A \, z]) \geq \sigma_{max}(A)$ e $\sigma_{min}([A \, z]) \leq \sigma_{min}(A)$
-\end{corollary}
-\begin{proof}
-Sia $A=U\Sigma V^\top      $ la decomposizione SVD di $A$ e consideriamo il vettore $\mathbf{x}= \mathbf{v}_1$, ottenuto dalla prima colonna della matrice $V$, e la matrice $\bar{A} = [A \, \mathbf{z}] \in \R^{m \times n+1}$. Sfruttando il \textbf{Corollario \ref{cor 5}} otteniamo
-\[
-\sigma_{max}(A)=\| A \mathbf{x} \|_2=\|\bar{A} \mathbf{\begin{bmatrix} x \\0 \end{bmatrix}}  \|_2 \leq \sigma_{max}(\bar{A})
-\]
-Analogmaente si dimostra che $\sigma_{min}(A) \geq \sigma_{min}(\bar{A}) $
-\end{proof}
-}
-\noindent
-\textit{Osservazione:} Ricordiamo che possiamo la decomposizione SVD come $$A = \sum_{i=1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top       $$
-
-\subsubsection{Teorema di Eckart-Young}
+\subsection{Teorema di Eckart-Young}
 \begin{theorem}\label{EY}
 \textbf{Teorema di Eckart-Young}\\
 \textit{Hp:} Sia $A \in \R^{m \times n}$ di rango $r$ e sia $k \in \mathbb{N} \ \text{tale che} \ 1 \leq k \leq r$ tale che $$A_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top      $$ è la matrice ottenuta troncando la sommatoria che definisce la decomposizione a valori singolari\\
@@ -552,41 +522,8 @@ tale che $Bw = 0$. Senza perdita di generalità, possiamo normalizzare $w$ in mo
 \]
 Il risultato segue prendendo la radice quadrata di entrambi i lati della disuguaglianza sopra.
 \end{proof}
-\begin{definition}
-\textbf{SVD ridotta}\\
-Sia $A$ una matrice $m \times n$ con rango $r$. La decomposizione ai valori singolari (SVD) ridotta di $A$ è data da $A = U' \Sigma' V'^\top$ dove:
-\[
-U' = 
-\begin{bmatrix}
-    | & | & & | \\
-    \mathbf{u}_1 & \mathbf{u}_2 & \cdots & \mathbf{u}_r \\
-    | & | & & |
-\end{bmatrix} \in \R^{m \times r}, \ 
-\Sigma' = 
-\begin{bmatrix}
-    \sigma_1 & 0 & \cdots & 0 \\
-    0 & \sigma_2 & \cdots & 0 \\
-    \vdots & \vdots & \ddots & \vdots \\
-    0 & 0 & \cdots & \sigma_r
-\end{bmatrix} \in \R^{r \times r} \ \text{e} \
-V'^\top       = 
-\begin{bmatrix}
-    - & \mathbf{v}_1^\top       & - \\
-    - & \mathbf{v}_2^\top       & - \\
-    & \vdots & \\
-    - & \mathbf{v}_r^\top       & - \\
-\end{bmatrix} \in \R^{r \times n}
-\]
-\end{definition}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1 \textwidth,height=5cm]{svd_econ.png}
-    \caption{Fattorizzazione SVD Ridotta.}
-    \label{fig:svd_econ}
-\end{figure}
-\newpage
-\subsection{Applicazioni Teoriche}
-\subsubsection{Pseudoinversa di una Matrice}
+
+\subsection{Pseudoinversa di una Matrice}
 \begin{definition}\label{psuedo}
 \textbf{Matrice Pseudoinversa o inversa di Moore-Penrose}\\
 Sia $A \in \R^{m \times n} \ \exists \ A^+ \in \R^{n \times m}$ detta matrice pseudoinversa di $A$ tale che
@@ -602,7 +539,7 @@ La matrice $A$ è la matrice pseudoinversa di $A^+$: $A=(A^+)^+$. In particolare
 \end{itemize}
 \end{definition}
 \noindent
-\textit{Osservazione:} Se si considera la generica applicazione lineare $\mathscr{L}: \mathbf{W_1} \rightarrow \mathbf{W_2}$ tra due spazi euclidei di dimensione finita, senza considerare la scelta di una base, si definisce l'applicazione pseudoinversa come l'unica applicazione lineare $\mathscr{L}^+: \mathbf{W_2} \rightarrow \mathbf{W_1}$ con le proprietà che $\mathscr{L}^+ \circ \mathscr{L} (x^+) = x^+$ per ogni $x^+ \in \text{Ker}(\mathscr{L})^\perp$ e $\mathscr{L}^+(y_0)=0$ per ogni $y_0 \in \text{Im}(\mathscr{L})^\perp$. Se $A$ è la matrice che rappresenta $\mathscr{L}$ rispetto a due basi ortonormali di $\mathbf{W_1}$ e $\mathbf{W_2}$, allora $A^+$ rappresenta $\mathscr{L}^+$ rispetto a tali basi.
+Se si considera la generica applicazione lineare $\mathscr{L}: \mathbf{W_1} \rightarrow \mathbf{W_2}$ tra due spazi euclidei di dimensione finita, senza considerare la scelta di una base, si definisce l'applicazione pseudoinversa come l'unica applicazione lineare $\mathscr{L}^+: \mathbf{W_2} \rightarrow \mathbf{W_1}$ con le proprietà che $\mathscr{L}^+ \circ \mathscr{L} (x^+) = x^+$ per ogni $x^+ \in \text{Ker}(\mathscr{L})^\perp$ e $\mathscr{L}^+(y_0)=0$ per ogni $y_0 \in \text{Im}(\mathscr{L})^\perp$. Se $A$ è la matrice che rappresenta $\mathscr{L}$ rispetto a due basi ortonormali di $\mathbf{W_1}$ e $\mathbf{W_2}$, allora $A^+$ rappresenta $\mathscr{L}^+$ rispetto a tali basi.
 
 \begin{proposition}
 \textbf{Fattorizzazione SVD e matrice pseudoinversa}\\
@@ -618,7 +555,7 @@ Da $A^\top = V\Sigma^\top U^T $ segue che ogni vettore $ \mathbf{y_0} \in \text{
 $$ C\mathbf{y_0} = CUY_0 = V\Sigma^+ U^\top U Y_0= V \Sigma^+ Y_0 = V0=0 $$
 \end{proof}
 \noindent
-\textit{Osservazione:} Le proprietà della matrice pseudoinversa possono essere equivalentemente riscritte come:
+\begin{oss}\label{equiv} Le proprietà della matrice pseudoinversa possono essere equivalentemente riscritte come:
 \begin{itemize}
     \item $AA^+A=A$,
     \item $A^+AA^+=A^+$,
@@ -626,14 +563,15 @@ $$ C\mathbf{y_0} = CUY_0 = V\Sigma^+ U^\top U Y_0= V \Sigma^+ Y_0 = V0=0 $$
     \item $(A^+A)^T=A^+A$.
 \end{itemize}
 \noindent
-da cui è possibile ricavare la seguente formulazione esplicita della matrice pseudoinversa nel caso Rg($A$) massimo: $A^+ = (A^* A)^{-1} A^\top$. Per sostituzione facile verificare che  $A^+=V\Sigma^+U^T$ 
+da cui è possibile ricavare la seguente formulazione esplicita della matrice pseudoinversa nel caso Rg($A$) massimo: $A^+ = (A^\top A)^{-1} A^\top$. Per sostituzione facile verificare che  $A^+=V\Sigma^+U^T$ 
 \begin{align*}
 A^+ &= (A^ \top A)^{-1}A^ \top  =(V\Sigma U^ \top U\Sigma V^ \top )^{-1} V\Sigma U^ \top  \\
     &=(V\Sigma^2 V^ \top )^{-1} V\Sigma U^ \top  =(V^ \top )^{-1} \Sigma^{-2} V^{-1} V\Sigma U^ \top  \\
     &= V \Sigma^{-2}\Sigma U^ \top  = V\Sigma^{-1}U^ \top 
 \end{align*}
+\end{oss}
 
-\subsubsection{Soluzione ai Minimi Quadrati}
+\subsection{Soluzione ai Minimi Quadrati}
 \begin{definition}
 \textbf{Soluzione ai minimi quadrati}\\
 Data una matrice $A \in \R^{m \times n}$ e $ \mathbf{b} \in \R^m $  vogliamo trovare $\mathbf{x^*} \in \R^n$ tale che $$\mathbf{x^*} =	\min_{\mathbf{x} \in \R^{n}} \| A\mathbf{x} - \mathbf{b} \|_2 $$
@@ -645,6 +583,8 @@ Data una matrice $A \in \R^{m \times n}$ e $ \mathbf{b} \in \R^m $  vogliamo tro
 \[
 \mathbf{x}^* = (A^\top A)^{-1}A^\top \mathbf{b}.
 \]
+\begin{oss}\label{minquad_pseudoinv} Notiamo come la matrice associata alla soluzione ai minimi quadrati combaci con la definizione equivalente di matrice pseudoinversa fornita nell'\textit{\textbf{Osservazione \ref{equiv}}}
+\end{oss}
 \end{theorem} \noindent 
 Sfruttando la fattorizzazione SVD $A\mathbf{x} = \mathbf{b}$ può essere riscritto come
 \[
@@ -682,7 +622,8 @@ $$
 \vdots & \vdots & \ddots & 0  \\
 0 & \cdots & 0 & \sigma_r^2  \\
 \end{bmatrix}
-$$ è invertibile per definizione di Valori Singolari.\\
+$$ 
+è invertibile per definizione di Valori Singolari.\\
 \[
 \mathbf{x}^* = V (\Sigma^\top \Sigma)^{-1} \Sigma^\top U^\top \mathbf{b}
 \]
@@ -709,16 +650,12 @@ Il Risultato è quindi
 \[
 \mathbf{x}^* = V' \Sigma'^{-1} U'^\top \mathbf{b}
 \]
-
-\section{Algoritmi per il Calcolo}
-\newpage
-\section{Applicazioni}
 \subsection{PCA - Principal Component Analysis}
 La Principal Component Analysis (PCA) è una tecnica che trova applicazione nell'ambito della riduzione della dimensionalità e dell'analisi di dati multivariati. L'obiettivo principale di questo metodo è l'identificazione delle "direzioni" lungo cui i dati sono maggiormente distribuiti al fine di determinare efficacemente i parametri delle legge delle variabili aleatorie da cui sono tratte le osservazioni. L'individuazione delle componenti principali è particolarmente utile nel caso di dataset di considerevoli dimensioni, in cui l'applicazione della PCA permette di ridurre la complessità dei dati mantenendo pur mantenendo al contempo la maggior parte delle informazioni rilevanti, consentendo così una più facile visualizzazione e interpretazione.\\
 \\
 Ipotizziamo di condurre un certo numero $m$ di esperimenti aleatori le cui realizzazioni possono essere riassunte in un vettore di $n$ elementi. Il dataset prodotto sarà una matrice $X$ di dimensioni $(m,n)$. Possiamo quindi calcolare il vettore riga medio $\bar{\mathbf{x}}$ sfruttando la media campionaria di un vettore di variabili aleatorie $$ \bar{\mathbf{x}}_j= \frac1m \sum_{i=1}^m X_{ij} \ \forall j=1, \dots, n$$
 Una volta ottenuto $\mathbf{\bar{x}}$ costruiamo la matrice media $ \bar{X}= [1 \, \dots \, 1]^\top \bar{\mathbf{x}} \ \text{di dimensioni} \ (m,n)$.
-Definiamo ora la matrice $B= X-\bar{X}$; questo passaggio equivale ad una traslazione dell'origine del dataset. Infine, sfruttando le proprietà del prodotto matriciale, notiamo che la matrice di covarianza di $B$ è data da $$ C = \frac{1}{n-1} B^\top B$$ dove il fattore $\frac{1}{n-1}$ è dato dalla non distorsione dello stimatore della varianza campionaria.\\
+Definiamo ora la matrice $B= X-\bar{X}$; questo passaggio equivale ad una traslazione dell'origine del dataset. Infine, sfruttando le proprietà del prodotto matriciale, notiamo che la matrice di covarianza di $B$ è data da $$ C = \frac{1}{n-1} B^\top B$$ dove il fattore $\frac{1}{n-1}$ è dato dal coefficiente dello stimatore non distorto della varianza campionaria.\\
 \\
 Per le proprietà matriciali dimostrate precedentemente la matrice $C$ è simmetrica e definita positiva; ciò risulta coerente con quanto ci aspetteremmo da una matrice di covarianza dove $C_{ii} = 	\lambda_i^2$ è la varianza mentre $C_{ik} = 	\lambda_{ik}$ la covarianza campionaria fra la $i-esima$ e $k-esima$ colonna.\\
 Date le buone proprietà di $C$ per il \textbf{Teorema \ref{teo spetr}}, possiamo riscrivere l'espressione come segue
@@ -733,55 +670,32 @@ $$
 dove $$
 \lambda_k = \frac{\sigma_k^2}{n-1}
 $$ 
-Illustriamo ora questo concetto dal punto di vista grafico 
-\begin{figure}[h]
+Illustriamo ora questo concetto con un esempio grafico: per farlo ci avvaliamo del \textbf{Codice \ref{pca}} che ci permette di generare un campione casuale a partire da un vettore gaussiano e, dopo aver riassunto i risultati in un matrice, calcoliamo i 3 assi principali tramite fattorizzazione SVD . 
+\begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth,height=6cm]{pca_ill.png}
-    \caption{Componenti Principali in $\R^3$}
+    \includegraphics[width=1\textwidth,height=6cm]{Images/pca_ill.png}
+    \caption{Componenti Principali in $\R^3$ }
     \label{fig:pca_ill}
 \end{figure}
     
-\begin{matlabcode}
-% Parametri della distribuzione gaussiana
-mu = [0 0 0]; % Media
-sigma = [1 0.5 0.2; 0.5 1 0.3; 0.2 0.3 1]; % Matrice di covarianza
-% Generazione del dataset casuale distribuito gaussianamente in R^3
-rng(42); % Impostiamo il seed per la replicabilità
-n = 400; % Numero di punti nel dataset
-data = mvnrnd(mu, sigma, n); % Generiamo i dati casuali
-% Calcolo della PCA
-coeff = pca(data); % Calcoliamo i coefficienti della PCA
-% Plot del dataset e dei vettori della PCA
-% Plot dei punti
-scatter3(data(:,1), data(:,2), data(:,3), 'MarkerEdgeColor', 'k'); 
-hold on;
-% Primo,Secondo e Terzo vettore della PCA
-quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
-        coeff(1,1), coeff(2,1), coeff(3,1), 'r', 'LineWidth', 2); 
-quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
-        coeff(1,2), coeff(2,2), coeff(3,2), 'g', 'LineWidth', 2); A
-quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
-        coeff(1,3), coeff(2,3), coeff(3,3), 'b', 'LineWidth', 2);
-% Titoli e grafica 
-xlabel('X'); ylabel('Y'); zlabel('Z');
-title('PCA');
-grid on; axis equal;
-legend({'Dati', 'Componente 1', 'Componente 2', 'Componente 3'});
-\end{matlabcode}
-
 \subsection{Compressione Immagini}
 La compressione delle immagini tramite la fattorizzazione SVD è un approccio fondamentale nell'ambito della riduzione della dimensionalità dei dati. L'obiettivo principale di questa procedura è quello di ridurre lo spazio di archiviazione richiesto per codificare le informazioni contenute in un'immagine mantenendo al contempo una qualità visiva accettabile.\\
 Dal punto di formale possiamo rappresentare un'immagine in bianco e nero come una matrice $X$ dove a ciascun elemento è associato un pixel dell'immagine con valori da 0 a 1 che rappresentano la scala di grigi che va dal bianco, 0, al nero , 1. \\
-Per il \textbf{Teorema \ref{EY}} siamo in grado di costruire un'appossimazione progressiva della matrice $X$ sfruttando la sommatoria dei valroi singolari di destra, sinistra e dei valori singolari minimizzando l'errore commesso. 
-$$ X_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top $$\\
-\\
-Inoltre, sfruttando il \textbf{Corollario \ref{cor 4}} saremo in grado di stimare l'errore commesso
+Per il \textbf{Teorema \ref{EY}} siamo in grado di costruire un'appossimazione progressiva della matrice $X$ sfruttando la sommatoria dei valori singolari di destra, sinistra e dei valori singolari minimizzando l'errore commesso. 
+$$ X_k= \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top $$
+Inoltre, sfruttando il \textbf{Corollario \ref{norma}} saremo in grado di stimare l'errore commesso
 $$\|X-X_k\|_2 = \| \sum_{i=k+1}^{r} \sigma_i \mathbf{u}_i \cdot \mathbf{v}_i^\top\|_2=\sigma_{k+1} $$
-
-\subsection{DMD - Dyniamic Mode Decomposition}
-La Dynamic Mode Decomposition (DMD) è uno strumento per l'analisi dei dati  e il rilevamento di strutture coerenti all'interno di essi. La DMD si basa sull'analisi di dataset spazio-temporali composti dall'unione di molteplici osservazioni di un certo numero di grandezze in determinati istanti di tempo. Gli ambiti di applicazione possono variare dalle serie temporali alle immagini dinamiche.\\ L'approccio si concentra sull'identificazione di strutture coerenti, o modi dominanti, che emergono nei dati consentendo così la descrizione e la comprensione dei fenomeni sottostanti anche di tipo non lineare e non stazionario. Grazie a queste caratteristiche la DMD risulta essere particolarmente adatta a sistemi complessi.\\
-\\
-Dato un insieme di osservazioni di $m$ parametri in $n$ istanti di tempo $\{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n$, dove $t_k'=t_k + \Delta t$,  costruiamo le matrici $X$ e $X'$ così definite
+\begin{figure}[H]
+	\centering
+    \includegraphics[width = \textwidth]{Images/Approssimazione.png}
+    \caption{Approssimazione dell'immagine con una matrice di rango k effettuata sfruttando il \textbf{Codice \ref{img}}}
+    \label{fig:approx}
+\end{figure}
+\newpage
+\section{DMD - Dyniamic Mode Decomposition}
+\subsection{Introduzione}
+La Dynamic Mode Decomposition è una tecnica per l'analisi di dati spazio-temporali il cui scopo è l'individuazione di strutture coerenti al loro interno. Le grandezze osservate sono ottenuti dall'unione di diverse misurazioni di determinati parametri in diversi istanti temporali.
+Grazie alle sue proprietà la DMD è particolarmente indicata  per la ricostruzione delle dinamiche evolutive di sistemi dinamici complessi, serie temporali e immagini dinamiche permettendo di rivelare modelli e dinamiche al loro interno, anche di tipo fortemente non lineare.\\ Dato un insieme di osservazioni di $m$ parametri in $n$ istanti di tempo \[ \{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n \subset \R^m \ e \ t_k'=t_k + \Delta t \]  costruiamo le matrici $X$ e $X'$ così definite
 $$ X= \begin{bmatrix}
 | & | &  & | \\
 \mathbf{x}(t_1) & \mathbf{x}(t_2) & \dots & \mathbf{x}(t_n)\\
@@ -795,58 +709,633 @@ X'= \begin{bmatrix}
 $$
 Assumendo un campionamento uniforme possiamo scrivere che $t_k=k\Delta t$ e di conseguenza quindi vale la seguente relazione $t_k'= t_k+\Delta t=t_{k+1}$.
 L'obbiettivo della DMD si riassume nel trovare la matrice $A$ tale che $X' \simeq AX$ e per l'ipotesi di campionamento uniforme unita alle proprietà del prodotto matriciale segue che $\mathbf{x}_{k+1} \simeq A\mathbf{x}_k$.\\
-Dal punto di vista matematico il problema si traduce nel seguente problema di minimizzazione $ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $
-\begin{center}
-\textcolor{orange}{ricopio dal quad.}
-\end{center}
-Siamo quindi in grado di individuare la soluzione in forma esplicita $$ A= \min_{A \in \R^{m \times m}}{\|X' -AX\|_F =X'X^+} $$
+Dal punto di vista matematico il problema si traduce nel seguente problema di minimizzazione 
+\[A= \min_{M \in \R^{m \times m}}{\|X' -MX\|_F } \]
+
+\begin{proposition}\label{Minim}
+\textbf{}\\
+\textit{Hp:} Data una matrice \( M \in \R^{m \times n} \) con \( m \geq n \), \(\operatorname*{Rg}(M) = r\) e \(M= U\Sigma V^\top \) la sua decomposizione SVD \\
+\textit{Ts:} Allora \(M^+={\operatorname*{argmin}}_{B \in \R^{n \times m}}{\|MB - I_m\|_F }\) dove con \(M^+\) denotiamo la matrice pseudoinversa e grazie alle proprietà della fattorizzazione SVD siamo in grado di trovare la sua formulazione esplicita \( M^+:=V\Sigma^+U^\top \), dove \( \Sigma_{i,j}^+=0 \ \text{se} \ \Sigma_{i,j}=0 \ \text{e} \ \Sigma_{i,j}^+= \frac{1}{\sigma_i} \ \text{se} \  \Sigma_{i,j}=\sigma_i \).
+\end{proposition}
+\begin{proof}
+Se \(B=[ \mathbf{b}_1, \dots, \mathbf{b}_m]\) dove \( \mathbf{b}_i  \) sono le colonne della matrice  \(B\) e \( \mathbf{e}_i \) sono le colonne della matrice identità \( I_m \). 
+Sfruttando le proprietà di equivalenza fra norme possiamo quindi scrivere 
+\[ \|MB - I_m \|_F^2= \sum_{i=1}^m \|M\mathbf{b}_i - \mathbf{e}_i \|_2^2 \]
+da cui la minimizzazione della norma di Frobenius può essere scritta come \(m\) minimizzazione in norma 2 indipendenti le une dalle altre. 
+\[
+\operatorname*{argmin}_B \|MB - I_m \|_F^2 = \sum_{i=1}^m \operatorname*{argmin}_{\mathbf{b}_i \in \R^n} \|M \mathbf{b}_i - \mathbf{e}_i \|_2^2
+\]
+Dati \(m\) problemi ai minimi quadrati per l'\textit{\textbf{Osservazione \ref{minquad_pseudoinv}}} sappiamo che la soluzione di un sistema ai minimi quadrati è \( \mathbf{b}_i= A^+\mathbf{e}_i \ \forall i=1, \dots, m\) da cui \(B=[A^+ \mathbf{e}_1, \dots, A^+\mathbf{e}_m ]=A^+ I_m=A^+ \)
+\end{proof} 
+Applicando la proposizione precedente al caso siamo quindi in grado di individuare la soluzione in forma esplicita $$ \tilde{C} = \operatorname*{argmin}_{C \in \R^{m \times m}}{\|X' -C X\|_F =X'X^+} $$
+\begin{proof} 
+Sfruttando le proprietà della norma di Frobenius osserviamo che 
+\[ \operatorname*{argmin}_{C}{\|X' -C X\|_F} = \sum_{i=1}^m \operatorname*{argmin}_{\mathbf{c}_i \in \R^m} \|\mathbf{x'}_i - \mathbf{c}_iX\|_2^2 
+\]
+dove 
+\[
+\begin{bmatrix}
+&& \\
+-& \mathbf{x'}_i & - \\
+&&
+\end{bmatrix}=\begin{bmatrix}
+&& \\
+-& \mathbf{c}_i & - \\
+&&
+\end{bmatrix}\begin{bmatrix}
+ & &  \\
+& X & \\
+& &
+\end{bmatrix}
+\]
+e le matrici hanno dimensine \((m\times n)=(m\times m)\times (m\times n)\)
+da cui scritto in forma di sistema lineare otteniamo
+\begin{align*}
+X^\top \mathbf{c}_i^\top &= \mathbf{x'}_i^\top \\
+\mathbf{\tilde{c}}_i^\top &= (X^\top)^+ \mathbf{x'}_i^\top \\
+\mathbf{\tilde{c}}_i^\top &= (X^+)^\top \mathbf{x'}_i^\top \\
+\mathbf{\tilde{c}}_i &=\mathbf{x'}_i X^+  \quad \forall i = 1, \dots,m
+\end{align*}
+\[ 
+\tilde{C}=\begin{bmatrix}
+\mathbf{\tilde{c}}_1 \\ \vdots \\ \mathbf{\tilde{c}}_m
+\end{bmatrix}= \begin{bmatrix}
+\mathbf{x'}_1X^+ \\ \vdots \\ \mathbf{x'}_mX^+
+\end{bmatrix}=X'X^+
+\]
+\end{proof}
+\begin{oss}
+Data una generica matrice \(M \in \R^{m \times n} \) allora \( (M^+)^\top=(M^\top)^+ \)
+\end{oss}
 Una volta ottenuta la matrice quadrata $A$ saremo interessati a trovare i suoi autovalori e autovettori. 
-Tuttavia, nonostante siamo in possesso di una formula esplicita che ci permette calcolarla se consideriamo una matrice $X \in \mathbb{R}^{m \times n}$ dove $m$ sono i parametri osservati e $n$ le realizzazioni temporali, notiamo che la matrice $A$ dovrebbe avere dimensioni $m \times m$. Nelle applicazioni, dove accade di frequente che i parametri osservati sono dell'ordine di $10^6$, ciò si traduce in una matrice con $10^{12}$ elementi rendendone quindi computazionalmente ingestibile il calcolo.
+Tuttavia, nonostante siamo in possesso di una formula esplicita che ci permette calcolarla se consideriamo una matrice $X \in \mathbb{R}^{m \times n}$ dove $m$ sono i parametri osservati e $n$ le realizzazioni temporali, notiamo che la matrice $A$ dovrebbe avere dimensioni $m \times m$. Dal punto di vista applicativo, dove accade di frequente che i parametri osservati sono dell'ordine di $10^6$, ciò si traduce in una matrice con $10^{12}$ elementi rendendone quindi computazionalmente ingestibile il calcolo.
 \\
-Per ovviare a questo problema possiamo ricorrere alla POD (proper orthogonal decomposition) in modo da ottenere una matrice $\bar{A}$ di dimensioni sensibilmente minori , $(n \times n)$, ma che al contempo approssimi al meglio le caratteristiche di $A \in \R^{m \times m}$.
-\subsubsection{POD - Proper Orthogonal Decomposition}
-
-
-\begin{large}{\textbf{Implementazione dell'Algoritmo}}\end{large}\\
-\textbf{Step 1.}\\
-Calcoliamo la fattorizzazione SVD ridotta della matrice $X=U'\Sigma' V'^\top$ dove $U' \in \R^{m \times r}$, $\Sigma' \in \R^{r \times r}$ e $V' \in \R^{n \times r}$ con $r \leq n = \min{\{m,n\}} $.  Questa scelta risulta essere cruciale  nel caso di elevate dimensioni della matrice $X$ e di Rg($X$) non massimo permettendo di semplificare il costo computazionale dei passaggi che seguiranno. \\
-Ricordiamo che per le proprietà della fattorizzazione SVD ridotta vale la seguente relazione $U'^\top U' = I_r \in \R^{r \times r} \ \text{e} \ V'^\top V' = I_r \in \R^{r \times r} $ e le colonne della matrice $U'$ prendono il nome di Modi della POD. \\
-\textbf{Step 2.}\\
-Dalla soluzione del problema di minimizzazione sappiamo che la soluzione  $A=X'X^+$ può essere scritta come $$A=X'V'\Sigma'^{-1}U'^\top$$
-In questo modo otteniamo una matrice $A$ di dimensioni $$(m \times m ) = (m \times n) \times (n \times r) \times ( r \times r) \times ( r \times m) $$Tuttavia come evidenziato in precedenza il nostro interesse si concentra sui primi $r$ autovalori ed autovettori principali di $A$ e per ridurne le dimensioni pur mantenendo la massima "somiglianza" alla matrice di partenza sfruttiamo la POD 
-$$\bar{A}=U'^\top A U' = U'^\top X' V' \Sigma'^{-1} \ \in \R^{r \times r}$$
-dove è importante notare che gli $r$ autovalori di $\bar{A}$ sono gli stessi $r$ autovalori principali della matrice $A$. 
-Possiamo quindi trovare direttamente la matrice $\bar{A}$ senza calcolare la matrice estesa $A$ riducendo così sensibilmente il costo computazionale. Una volta introdotta la matrice $\bar{A}$ il modello lineare diventa $\mathbf{\bar{x}}_{k+1} \simeq \bar{A} \mathbf{\bar{x}}_k $ dove $\mathbf{x}=U' \mathbf{\bar{x}}$
-\\
-\textbf{Step 3.}\\
+Per ovviare a questo problema possiamo ricorrere alla SVD ridotta in modo da ottenere una matrice $\bar{A}$ di dimensioni sensibilmente minori, al massimo $(n \times n)$, ma che al contempo \textit{approssimi} al meglio le caratteristiche di $A \in \R^{m \times m}$.
+Dal punto di vista matematico il concetto appena espresso  può essere formalizzato come segue mediante la POD, ovvero Proper Orthogonal Decomposition. \\
+\textbf{POD Proper Orthogonal Decomposition}\\
+Ricordando la \textbf{Proposizione \ref{prop: span}} sappiamo che data una matrice \(Y \in \R^{m \times n} \) con Rg(\(Y\))\(=d\) lo Span(\(Y\)) può essere rappresentato come le prime \(d\) colonne linearmente indipendenti della matrice U. Lo scopo principale della POD è la riduzione della dimensione dei dati e quindi il numero di colonne necessarie per rappresentarli. Questo processo di riduzione è cruciale perché permette di semplificare modelli complessi senza perdere informazioni significative, migliorando l'efficienza computazionale e l'interpretabilità dei risultati. 
+Le colonne della matrice Y possono quindi essere rappresentate come una combinazione lineare delle delle \(d\) colonne linearmente indipendenti della matrice \(U^d \in \R^{m \times d}\).
+Grazie alla fattorizzazione SVD ridotta poniamo, da cui \( Y = U^d \Sigma (V^d)^\top \)
+\[
+\mathbf{y}_j= \sum_{i=1}^d (\Sigma (V^d)^\top)_{ij} \mathbf{u}_i = \sum_{i=1}^d ((U^d)^\top U^d \Sigma (V^d)^\top)_{ij} \mathbf{u}_i= \sum_{i=1}^d ((U^d)^\top Y)_{ij} \mathbf{u}_i  
+\]
+\[
+\mathbf{y}_j=\sum_{i=1}^d \left( \sum_{k=1}^m U_{ki}^dY_{kj} \right) \mathbf{u}_i = \sum_{i=1}^d \mathbf{u}_i^\top \mathbf{y}_j \mathbf{u}_i 
+\quad \forall j=1,\dots,n
+\]
+\textcolor{orange}{DA FINIRE}\\
+Vale il seguente teorema
+\begin{theorem}\textbf{SVD e POD}\\
+\textit{Hp:} Sia \( Y = [\mathbf{y}_1, \dots, \mathbf{y}_n] \in \R^{m \times n}\) una matrice di rango \(d \leq \min{{m,n}}\) e inoltre sia \(Y=U \Sigma V^\top\) la sua scomposizione a valori singolari.\\
+\textit{Ts:} Allora \( \forall \ l \in \{1,\dots,d\} \) la soluzione al seguente problema di ottimizzazione
+\[
+\max_{\mathbf{\tilde{u}}_1, \dots, \mathbf{\tilde{u}}_l \in \R^m} \sum_{i=1}^l \sum_{j=1}^n | \mathbf{y}_j^\top \mathbf{\tilde{u}}_i |^2 \quad s.t. \quad  \mathbf{\tilde{u}}_i^\top \mathbf{\tilde{u}}_j = \delta_{i,j} \ 1 \leq i,j \leq l
+\]
+ è data dai vettori singolari \( \{ \mathbf{u}_i\}_{i=1}^l\) ovvero le prime \(l\) colonne di U.
+\end{theorem}
+\subsection{Implementazione dell'Algoritmo}
+\begin{itemize}
+\item \textbf{Step 1.}
+Calcoliamo la fattorizzazione SVD ridotta della matrice $X=U'\Sigma' V'^\top$ dove $U' \in \R^{m \times r}$, $\Sigma' \in \R^{r \times r}$ e $V' \in \R^{n \times r}$ con $r \leq n = \min{\{m,n\}} $.  Questa scelta risulta essere cruciale  nel caso di elevate dimensioni della matrice $X$ e di Rg($X$) non massimo permettendo di semplificare sensibilmente la complessità computazionale dei passaggi che seguiranno. \\
+Ricordiamo che per le proprietà della fattorizzazione SVD ridotta vale la seguente relazione $U'^\top U' = I_r \in \R^{r \times r} \ \text{e} \ V'^\top V' = I_r \in \R^{r \times r} $ e le colonne della matrice $U'$ prendono il nome di \textit{Modi della Proper Orthogonal Decomposition}. 
+\item \textbf{Step 2.}
+Dalla soluzione del problema di minimizzazione sappiamo che $A=X'X^+$ che a sua volta può essere scritta come $$A=X'V'\Sigma'^{-1}U'^\top$$
+Tuttavia così facendo otteniamo una matrice $A$ di dimensioni \((m \times m ) \) con tutte le criticità che essa comporta. Per ovviare a questo problema ricorriamo quindi alla POD proiettando  $A$ sui \textit{Modi} di \(U'\). In questo modo riusciamo a ridurre le dimensioni della matrice pur mantenendo la massima "somiglianza" alla matrice di partenza   
+$$\bar{A}=U'^\top A U' = U'^\top X' X^+ U'= U'^\top X' V' \Sigma'^{-1} \ \in \R^{r \times r}$$
+E' importante notare che gli $r$ autovalori di $\bar{A}$ sono gli stessi $r$ autovalori della matrice $A$. 
+Possiamo quindi trovare direttamente la matrice $\bar{A}$ senza calcolare la matrice estesa $A$ riducendo così sensibilmente il costo computazionale. Una volta introdotta la matrice $\bar{A}$ il modello lineare diventa $\mathbf{\bar{x}}_{k+1} \simeq \bar{A} \mathbf{\bar{x}}_k $ e $\mathbf{x}=U' \mathbf{\bar{x}}$
+\item \textbf{Step 3.}
 Calcoliamo la decomposizione spettrale della matrice $\bar{A}$  $$\bar{A} W = W \Lambda$$
-dove le colonne $w_i$ $i = 1 \dots r$ della matrice $W \in \R^{n \times n}$ sono gli autovettori di $\bar{A}$ mentre $\Lambda \in R^{n \times n}$ è la matrice diagonale contenente gli autovalori.\\
-\textbf{Step 4.}\\
+dove le colonne $w_i$ $i = 1 \dots r$ della matrice $W \in \R^{n \times n}$ sono gli autovettori di $\bar{A}$ mentre $\Lambda \in R^{n \times n}$ è la matrice diagonale contenente gli autovalori.
+\item \textbf{Step 4.}
 I modi $\Phi \in \R^{m \times m}$ sono ricostruiti sfruttando la matrice degli autovettori $W$ del modello lineare di dimensioni ridotte e la matrice dei dati $X'$
-$$ \Phi = X'V'\Sigma'^{-1}W $$  notiamo in particolare le dimensioni delle matrici che compongono il prodotto che genera la matrice quadrata finale 
+$$ \Phi = X'V'\Sigma'^{-1}W $$ 
+Infatti le dimensioni delle matrici che compongono il prodotto che genera la matrice quadrata finale 
 $(m \times m) = (m \times n) \times (n \times r) \times (r \times r) \times (r \times r)$.\\
 Notiamo che abbiamo quindi ricavato gli autovalori della matrice di partenza $A$ senza calcolarne esplicitamente né il valore ne la decomposizione spettrale
-
-$$A \Phi = X'X^+ \Phi = X V' \Sigma'^{-1} U'^\top X'V'\Sigma'^{-1}W $$ e ricordando che la matrice $\bar{A} =  U'^\top X' V' \Sigma'^{-1}$ e che $\bar{A} W = W \Lambda$ otteniamo
+$$A \Phi = X'X^+ \Phi = X' V' \Sigma'^{-1} U'^\top X'V'\Sigma'^{-1}W $$ e ricordando che la matrice $\bar{A} =  U'^\top X' V' \Sigma'^{-1}$ e che $\bar{A} W = W \Lambda$    otteniamo
 $$ A \Phi = X'V'\Sigma'^{-1} \bar{A}  W = X'V'\Sigma'^{-1} W \Lambda  = \Phi \Lambda $$
+da cui
+$\Phi = X'V'\Sigma'^{-1}W $ \\
+\end{itemize}
 
-Una volta calcolati i Modi della Dynamic Mode Decomposition sorge spontanea una domanda: data la matrice $\Phi$ e $\Lambda$ siamo in grado di ricostruire 
-\textcolor{orange}{
-Completo con 
-Ampiezza dei modi b
-Ricsotruzione dello stato pag 264 e 265 fondamentali per l'articolo medico
-}
-\section{DMD e Modelli Epidemiologici}
-Come abbiamo osservato nel paragrafo precedente la DMD si presta all'analisi di dati generati da sistemi complessi con un comportamento fortemente non lineare. Un esempio di sistemi di questo timo sono i modelli pandemici tra cui uno dei più noti è il Modello SIR su cui concentreremo le nostre attenzioni da qui in poi.  
+
+Una volta calcolati i Modi della Dynamic Mode Decomposition  \\
+\\
+\textbf{Decomposizione spettrale e ricostruzione del Sistema Espansione DMD}\\
+Una delle caratteristiche più importanti della DMD è la possibilità di ricostruire le osservazione del sistema sfruttando una decomposizione spettrale interamente basata sui dati
+
+
+\[
+\mathbf{x}_k=\sum_{j=1}^r \phi_j \lambda_j^{k-1}b_j= \Phi\Lambda^{k-1}\mathbf{b}=\begin{bmatrix}
+| & & | \\
+\phi_1 & \dots & \phi_r \\
+| & & | \\
+\end{bmatrix} \begin{bmatrix}
+\lambda_1 && \\
+& \ddots &\\
+&& \lambda_r \\
+\end{bmatrix}
+\]
+\textcolor{orange}{DA FINIRE}
+\newpage
+\section{Applicazioni della Dynamic Mode Decomposition}
+Come abbiamo osservato nel paragrafo precedente la DMD si presta all'analisi di dati generati da sistemi complessi con un comportamento fortemente non lineare. Per verificarne la validità consideriamo un problema modello dalla cui soluzione traiamo i dati delle osservazioni sperimentali che ricostruiremo con la DMD; non dimentichiamo tuttavia che nella realtà le misurazioni campionarie sarebbero gli unici dati a nostra disposizione ed il nostro scopo sarebbe proprio quello di ricostruire le dinamiche incognite del sistema che li ha generati.\\ 
+Dal punto di vista fisico un possibile esempio di problemi che generano una successione di osservazioni spazio-temporali sono tutti quei fenomeni che possono essere modellati come una o più equazione alle derivate parziali di tipo parabolico. 
+In particolare tratteremo sia l'equazione di diffusione del calore lungo un segmento che un sistema di equazioni di reazione e diffusione che caratterizzano il modello pandemico S.E.I.R.D.. 
+
+\subsection{Equazione del Calore}
+Consideriamo una funzione \( u: [a,b] \times [0,T] \rightarrow \R \), dove \([a,b] \subset \R \), tale che soddisfi il seguente problema composto da un'equazione alle derivate parziali soggetta alle condizioni ai limiti e alla condizione iniziale. 
+\[
+\left\{
+\begin{aligned}
+\frac{\partial}{\partial t} u(x,t) - D \Delta u(x,t) &= f(x,t) \\
+u(x,0) = u_0(x) \\
+\frac{\partial}{\partial x} u(a,t) = \phi_a \\
+u(b,t)=\phi_b
+\end{aligned}
+\right.
+\]
+Nel caso monodimensionale possiamo riscrivere l'equazione come segue
+\[ \partial_t u(x,t) - D \partial_{xx}^2 u(x,t) = f(x,t) \]
+L'equazione è nota come \textit{equazione del calore}, in quanto \(u(x,t)\) descrive la temperatura nel punto \(x\) all'istante \(t\). 
+Definiamo ora la discretizzazione sull griglia di calcolo \( x_i= a + ih \) dove \(h = \frac{|a-b|}{N} \) con \( N \in \mathbb{N} \)
+e \( t_n= \tau n\) con \( \tau = \frac{T}{M} \) con \( M \in \mathbb{N} \). 
+Discretizziamo il problema in spazio tramite la seguente relazione alle differenze finite del secondo ordine 
+\[\partial_{xx}^2 u(x,t) = D_{xx}^2 u(x_i,t) + \textit{O}(h^2)= \frac{u(x_{i+1},t)-2u(x_i,t)+u(x_{i-1},t)}{h^2} + \textit{O}(h^2) \]
+\[ d_t u(x_i,t) - D \frac{u(x_{i+1},t)-2u(x_i,t)+u(x_{i-1},t)}{h^2} = f(x_i,t) \quad \forall i= 0, \dots, N
+\]
+Per ogni nodo abbiamo definito una funzione continua in tempo. Per discretizzare la derivata temporale utilizziamo il metodo di Eulero implicito in modo da ottenere un metodo incondizionatamente assolutamente stabile. 
+Per fare ciò utilizziamo il metodo delle differenze finite all'indietro
+\[
+d_t u(x_i,t) = D_x^-u(x_i, t_{n+1}) + \textit{O}( \tau ) =  \frac{u(x_i,t_{n+1})-u(x_i,t_n)}{\tau} + \textit{O}( \tau )
+\]
+\[
+\frac{u(x_i,t_{n+1})-u(x_i,t_n)}{\tau}-D\frac{u(x_{i+1},t_{n+1})-2u(x_i,t_{n+1})+u(x_{i-1},t_{n+1})}{h^2}=f(x_i,t_{n+1})
+\]
+Per alleggerire la notazione poniamo d'ora in avanti \( u(x_i,t_n) \approx U_i^n \)
+da cui 
+\[
+\frac{U_i^{n+1}-U_i^n}{\tau} - D \frac{U_{i+1}^{n+1}-2U_i^{n+1}+U_{i-1}^{n+1}}{h^2} = f(x_i,t_{n+1}) \quad \forall i= 1, \dots, N-1
+\]
+Il primo nodo della discretizzazione \( i=0 \) sarà ricavato mediante il metodo del nodo fantasma 
+\[
+\left\{
+\begin{aligned}
+\frac{U_0^{n+1} - U_0^n}{\tau} - D \frac{U_{1}^{n+1} - 2U_0^{n+1} + U_{-1}^{n+1}}{h^2} &= f(x_0, t_{n+1}) \\
+\frac{U_1^{n+1}-U_{-1}^{n+1}}{2h} &= \phi_a
+\end{aligned}
+\right.
+\]
+da cui sostituendo la seconda equazione nella prima otteniamo
+\[
+U_0^{n+1} + \frac{2\tau D}{h^2}(U_0^{n+1}-U_1^{n+1})= U_0^n +  \tau(f(x_0,t_{n+1})+ \frac{2D\phi_a}{h})
+\]
+Mentre il penultimo nodo \(x_{N-1} \ \forall n=1,\dots,M\) 
+\[
+\left\{
+\begin{aligned}
+\frac{U_{N-1}^{n+1}-U_{N-1}^n}{\tau} - D \frac{U_{N}^{n+1}-2U_{N-1}^{n+1}+U_{N-2}^{n+1}}{h^2} &= f(x_{N-1},t_{n+1}) \\
+U_N^n &= \phi_b \quad \forall n=1,\dots,M
+\end{aligned}
+\right.
+\]
+da cui 
+\[
+U_{N-1}^{n+1} + \frac{\tau D}{h^2}( U_{N-1}^{n+1} - U_{N-2}^{n+1}) = \tau f(x_{N-1},t_{n+1}) +\frac{D \tau \phi_b}{h^2}
+\]
+ciò comporterà una correzione del primo ed ultimo elemento del termine forzante ad ogni passo di discretizzazione temporale.\\
+Costruiamo quindi la formulazione matriciale del problema: 
+\begin{itemize}
+\item definiamo il vettore contenente la soluzione valutata all'istante \(t_n\) nei nodi spaziali della griglia di calcolo \[ \mathbf{u}^{n+1} =\mathbf{u}(t_{n+1})=[u(x_0,t_{n+1}), \ \dots \ , u(x_N,t_{n+1})]^\top  \in \R^{N+1}\]
+In particolare  lo stato iniziale \( \mathbf{u}^0=\mathbf{u}(t_0)=[u_0(x_0), \dots, u_0(x_N)]^\top \) è noto e  per la condizione di Dirichlet in \(x=b\) \[ \mathbf{u}^{n} =\mathbf{u}(t_{n})=[u(x_0,t_{n}), \ \dots \ , u(x_{N-1},t_n), \phi_b ]^\top \quad \forall \ n=0, \ \dots \ ,M \]  
+Per cui ad ogni iterazione il vettore delle incognite è così definito
+\[
+\mathbf{\tilde{u}}^{n} =\mathbf{u}(t_{n})=[u(x_0,t_{n}), \ \dots \ , u(x_{N-1},t_n)]^\top \in \R^N \quad \forall \ n=0, \ \dots \ ,M
+\]
+e la soluzione ad ogni istante è data da \( \mathbf{u}= [ \mathbf{\tilde{u}}, \phi_b]^\top \) 
+\item la matrice di massa o di iterazione 
+\[
+A_h= \frac{1}{h^2} \begin{bmatrix}
+2 & -2 & 0 & \dots & 0 \\
+-1 & 2 & -1 & \dots & \vdots\\
+0 & \ddots & \ddots & \ddots & 0 \\
+\vdots& \dots & -1& 2& -1 \\
+0 & \dots & 0& -1 & 2
+\end{bmatrix} \in \R^{N \times N} 
+\]
+\item il vettore dei termini noti corretto con le opportune condizioni al bordo
+\[
+\mathbf{F}(t_n)=\begin{bmatrix}
+f(x_0,t_n)+ \frac{2D\phi_a}{h}\\
+\vdots \\
+f(x_{N-1},t_n) +\frac{D}{h^2}\phi_b
+\end{bmatrix} \in \R^N
+\].
+\end{itemize}
+Possiamo riformulare il sistema di equazioni in forma matriciale
+\[
+\mathbf{\tilde{u}}^{n+1}(I_N+\tau D A_h)=\mathbf{\tilde{u}}^n+ \tau \mathbf{F}(t_{n+1})
+\quad \mathbf{\tilde{u}} \in \R^N
+\]
+Da cui 
+\[
+\mathbf{\tilde{u}}^{n+1}=(I_N+\tau D A_h)^{-1}(\mathbf{\tilde{u}}^n+\tau \mathbf{F}(t_{n+1}))
+\]
+La soluzione \(U \in \R^{N+1 \times M+1} \ \) sarà quindi composta da \( \mathbf{u} \in \R^{N+1} \)
+\[
+U= \begin{bmatrix}
+| & | & & | &  & |  \\
+\mathbf{u}^0 & \mathbf{u}^1 & \dots & \mathbf{u}^i & \dots &\mathbf{u}^M \\
+| & | & & | &  & | 
+\end{bmatrix}=
+\begin{bmatrix}
+| & | & & | &  & |  \\
+\mathbf{\tilde{u}}^0 & \mathbf{\tilde{u}}^1 & \dots & \mathbf{\tilde{u}}^i & \dots &\mathbf{\tilde{u}}^M \\
+| & | & & | &  & | \\
+\phi_b & \phi_b & & \phi_b & & \phi_b
+\end{bmatrix}
+\]
+Abbiamo costruito un insieme di osservazioni spazio-temporali che compongono un dataset, ideale per l'applicazione della Dynamic Mode Decomposition (DMD)dal momento che consiste in una serie di snapshot temporali uniformemente intervallati che catturano l'evoluzione del un sistema dinamico che descrive la diffusione del calore lungo il segmento.
+\textcolor{orange}{DA FINIRE}
+\subsection{Sistema di Equazioni Paraboliche}
+manufacturing generation
+\textcolor{orange}{DA FINIRE}
+
+\subsection{Modello SEIRD}
+Il modello pandemico S.E.I.R.D. ( Suscettibili, Esposti, Infetti, Guariti, Deceduti ) è caratterizzato da 5 diverse popolazioni, ciascuna rappresentata da una funzione in spazio e tempo, che interagiscono fra loro in funzione della loro densità spaziale, combinate per un opportuno coefficiente, e di un termine di diffusione spaziale. 
+Ciascuna funzione descrive una categoria ed è così definita \[s,e,i,r,d: \Omega \times [0,T]  \rightarrow \R^+, \ \Omega \subset \R. \]
+Il modello si compone da un sistema di equazioni paraboliche con termine di reazione  
+\begin{equation*}
+\begin{cases}
+\frac{\partial s(\mathbf{x},t)}{\partial t}+ \beta_i \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ i(\mathbf{x},t) + \beta_e \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ e(\mathbf{x},t) - \nabla \cdot (n_{pop} \  \nu_s \nabla s(\mathbf{x},t))=0 \\
+
+\frac{\partial e(\mathbf{x},t)}{\partial t} - \beta_i \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ i(\mathbf{x},t) - \beta_e \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ e(\mathbf{x},t) + \\ \hspace{7.75cm} + \left( \alpha + \gamma_e \right)e(\mathbf{x},t) - \nabla \cdot (n_{pop} \  \nu_e \nabla e(\mathbf{x},t))=0 \\
+
+\frac{\partial i(\mathbf{x},t)}{\partial t} - \alpha \  e(\mathbf{x},t) + \left( \gamma_i + \delta \right) i(\mathbf{x},t) - \nabla \cdot \left( n_{pop} \ \nu_i \nabla i(\mathbf{x},t) \right) =0 \\
+
+\frac{ \partial r(\mathbf{x},t)}{ \partial t} - \gamma_e \  e(\mathbf{x},t) - \gamma_i i(\mathbf{x},t) - \nabla \cdot \left(n_{pop} \ \nu_r \nabla i(\mathbf{x},t) \right) = 0 \\
+
+\frac{ \partial d(\mathbf{x},t)}{ \partial t} - \delta i(\mathbf{x},t) =0 \\
+
+\end{cases}
+\end{equation*}
+Descriviamo i parametri che caratterizzano il modello: 
+\begin{itemize}
+\item \(A_e\) è il \textit{Parametro di Allee} che in un modello epidemiologico mette in relazione il tasso di crescita di una classe di popolazione con la sua densità.
+\item \( \beta_i, \beta_e \) descrivono il tasso di trasmissione fra i sintomatici e i suscettibili e gli asintomatici e i suscettibili, ciascuno in unità giorno\(^{-1}\).  
+\item \( \nu_s, \nu_e, \nu_i, \nu_r \) sono i parametri di diffusione dei vari gruppi di popolazioni.
+\item \( \delta \) è il tasso di mortalità.
+\item \(  \gamma_e, \gamma_i \) corrispondono al tasso di guarigione rispettivamente degli asintomatici e dei sintomatici.  
+\item \( \alpha \) denota il periodo di incubazione della malattia. 
+\end{itemize}
+Dal momento che è un problema evolutivo imponiamo  le condizioni iniziali e al contorno per ogni equazione del sistema 
+\begin{equation*}
+\begin{cases}
+s(x,0)=s_0(x)= e^{-(x+1)^4}+e^{- \frac{(x-0.35)^2}{10^{-2}}} + \frac18 \left( e^{- \frac{(x-0.62)^4}{10^{-5}}} + e^{- \frac{(x-0.52)^4}{10^{-5}}} + e^{- \frac{(x-0.42)^4}{10^{-5}}} \right) + \frac{1}{4}e^{- \frac{(x-0.735)^4}{10^{-5}}};  \\
+\frac{ \partial s(0,t)}{\partial x} = \phi_a= 0 ; \quad s(0,t)=\phi_b=0 \\
+e(x,0)=e_0(x)= \frac{1}{20}e^{- \frac{(x-0.735)^4}{10^{-5}}}; \quad \frac{ \partial e(0,t)}{\partial x} = \phi_a 0 ; \quad e(0,t)=\phi_b=0 \\
+i(x,0)=i_0(x)= 0; \quad \frac{ \partial i(0,t)}{\partial x} = \phi_a= 0 ; \quad i(0,t)=\phi_b=0 \\
+r(x,0)=r_0(x)= 0; \quad \frac{ \partial r(0,t)}{\partial x} = \phi_a=0 ; \quad r(0,t)=\phi_b=0 \\
+d(x,0)=d_0(x)=0; \quad \frac{ \partial d(0,t)}{\partial x} = \phi_a =0 ; \quad d(0,t)=\phi_b=0
+\end{cases}
+\end{equation*}
+Per risolvere il problema con il metodo alle differenze finite utilizziamo un metodo semi-implicito in modo tale da non dover trovare ad ogni iterazione la soluzione di un sistema di equazioni non lineari ma solamente la soluzione di un sistema lineare. Assumendo coefficienti costanti possiamo scrivere  \( \forall i=0, \dots , N-1 \) 
+\begin{equation*}
+\begin{cases}
+\frac{S_i^{n+1} - S_i^n}{\tau} + \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n + \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n - n_{pop} \nu_s \frac{S_{i+1}^{n+1} - 2S_i^{n+1} + S_{i-1}^{n+1}}{h^2} = 0 \\
+\frac{E_i^{n+1} - E_i^n}{\tau} - \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n - \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n + (\alpha + \gamma_e) E_i^n - n_{pop} \nu_e \frac{E_{i+1}^{n+1} - 2E_i^{n+1} + E_{i-1}^{n+1}}{h^2} = 0 \\
+\frac{I_i^{n+1} - I_i^n}{\tau} - \alpha E_i^n + \left( \gamma_i + \delta \right) I_i^n - n_{pop} \nu_i \frac{I_{i+1}^{n+1} - 2I_i^{n+1} + I_{i-1}^{n+1}}{h^2} = 0 \\
+\frac{R_i^{n+1} - R_i^n}{\tau} - \gamma_e E_i^n - \gamma_i I_i^n - n_{pop} \nu_r \frac{R_{i+1}^{n+1} - 2R_i^{n+1} + R_{i-1}^{n+1}}{h^2} = 0 \\
+\frac{D_i^{n+1} - D_i^n}{\tau} - \delta I_i^n = 0
+\end{cases}
+\end{equation*}
+Per semplicità consideriamo il termine di reazione non lineare nell'istante precedente come se fosse la il termine forzante \(f(x,t)\) di una generica equazione di diffusione-reazione 
+\begin{equation*}
+\begin{cases}
+\frac{S_i^{n+1} - S_i^n}{\tau} - n_{pop} \nu_s \frac{S_{i+1}^{n+1} - 2S_i^{n+1} + S_{i-1}^{n+1}}{h^2} = - \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n - \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n = :{f_S}_i^n \\
+
+\frac{E_i^{n+1} - E_i^n}{\tau} - n_{pop} \nu_e \frac{E_{i+1}^{n+1} - 2E_i^{n+1} + E_{i-1}^{n+1}}{h^2} =  \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n + \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n = :{f_E}_i^n \\
+\frac{I_i^{n+1} - I_i^n}{\tau}  - n_{pop} \nu_i \frac{I_{i+1}^{n+1} - 2I_i^{n+1} + I_{i-1}^{n+1}}{h^2} =  \alpha E_i^n - \left( \gamma_i + \delta \right) I_i^n = :{f_I}_i^n \\
+\frac{R_i^{n+1} - R_i^n}{\tau} - n_{pop} \nu_r \frac{R_{i+1}^{n+1} - 2R_i^{n+1} + R_{i-1}^{n+1}}{h^2} =  \gamma_e E_i^n + \gamma_i I_i^n = :{f_R}_i^n \\
+\frac{D_i^{n+1} - D_i^n}{\tau} =  \delta I_i^n =:{f_D}_i^n \\
+\end{cases}
+\end{equation*}
+Infine, in ogni equazione nel primo e ultimo nodo della discretizzazione, imponiamo le condizioni al contorno: di tipo Neumann in \(x=0\) e di tipo Dirichlet in \(x=1\)
+\begin{equation*}
+\begin{cases}
+\frac{S_1^n-S_{-1}^n}{2h}=0, \quad S_N^n=0 \\
+\frac{E_1^n-E_{-1}^n}{2h}=0, \quad E_N^n=0 \\
+\frac{I_1^n-I_{-1}^n}{2h}=0, \quad I_N^n=0 \\
+\frac{R_1^n-R_{-1}^n}{2h}=0, \quad R_N^n=0 \\
+\hspace{0.7cm}--\hspace{0.7cm} \quad D_N^n=0 \\
+\end{cases}
+\end{equation*}
+Osserviamo che per la funzione \(d\) non essendoci termine diffusivo non è possibile imporre la derivata prima nulla con il metodo del nodo fantasma; tuttavia se osserviamo la relazione costitutiva del termine forzante allora la condizione di Neumann al bordo è garantita dalla condizione imposta sul \(I\). \\  
+Costruiamo la formulazione matriciale di ogni equazione del problema che come nel caso precedente è composta dalla matrice di iterazione, dal vettore dei termini noti e dai vettori contententi 
+\begin{equation*}
+A_h= \frac{1}{h^2} \begin{bmatrix}
+2 & -2 & 0 & \dots & 0 \\
+-1 & 2 & -1 & \dots & \vdots\\
+0 & \ddots & \ddots & \ddots & 0 \\
+\vdots& \dots & -1& 2& -1 \\
+0 & \dots & 0& -1 & 2
+\end{bmatrix} \in \R^{N \times N} 
+\quad
+\mathbf{F_S}^n = \begin{bmatrix} {f_S}_0^n + \frac{2 n_{pop} v_s \phi_a}{h}\\ {f_S}_2^n \\ \vdots \\ {f_S}_N^n + \frac{n_{pop} v_s \phi_b}{h^2} \end{bmatrix} \in \R^N 
+\end{equation*}
+\begin{equation*}
+\mathbf{F_E}^n = \begin{bmatrix} {f_E}_0^n + \frac{2 n_{pop} v_e \phi_a}{h}\\ {f_E}_2^n \\ \vdots \\ {f_E}_N^n + \frac{n_{pop} v_e \phi_b}{h^2} \end{bmatrix}\in \R^N \quad
+\mathbf{F_I}^n =\begin{bmatrix} {f_I}_0^n + \frac{2 n_{pop} v_i \phi_a}{h}\\ {f_I}_2^n \\ \vdots \\ {f_I}_N^n + \frac{n_{pop} v_i \phi_b}{h^2}\end{bmatrix} \in \R^N \quad
+\mathbf{F_R}^n =\begin{bmatrix} {f_R}_0^n +  \frac{2 n_{pop} v_r \phi_a}{h} \\ {f_R}_2^n \\ \vdots \\ {f_R}_N^n + \frac{n_{pop} v_r \phi_b}{h^2}\end{bmatrix} \in \R^N 
+\end{equation*}
+Possiamo quindi scrivere la seguente formulazione matriciale del problema dove \( \mathbf{\tilde{s}},\mathbf{\tilde{e}},\mathbf{\tilde{i}},\mathbf{\tilde{r}}, \mathbf{\tilde{d}} \in \R^N \)
+\begin{equation*}
+\begin{cases}
+\mathbf{\tilde{s}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_s A_h )^{-1} (\mathbf{\tilde{s}}^n + \tau \mathbf{F_s}^n) \\
+\mathbf{\tilde{e}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_e A_h )^{-1} (\mathbf{\tilde{e}}^n + \tau \mathbf{F_e}^n) \\
+\mathbf{\tilde{i}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_i A_h )^{-1} (\mathbf{\tilde{i}}^n + \tau \mathbf{F_i}^n) \\
+\mathbf{\tilde{r}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_r A_h)^{-1} (\mathbf{\tilde{r}}^n + \tau \mathbf{F_r}^n ) \\
+\mathbf{\tilde{d}}^{n+1}= \mathbf{\tilde{d}}^n + \tau \ \mathbf{F_d}^n \\ 
+\end{cases}
+\end{equation*}
+Aggiungendo la condizione al contorno
+\( \mathbf{s}=[ \mathbf{\tilde{s}}, 0]^\top  \quad  \mathbf{e}=[ \mathbf{\tilde{e}}, 0]^\top  \quad \mathbf{i}=[ \mathbf{\tilde{i}}, 0]^\top\) 
+otteniamo le matrici che contengono le soluzioni \( R^{N+1 \times M+1} \)
+\[
+S=\begin{bmatrix} 
+| & & | \\
+| & & | \\
+\end{bmatrix} \quad
+E=\begin{bmatrix} 
+| & & | \\
+| & & | \\
+\end{bmatrix} \quad
+I=\begin{bmatrix} 
+| & & | \\
+| & & | \\
+\end{bmatrix} \quad
+R=\begin{bmatrix} 
+| & & | \\
+| & & | \\
+\end{bmatrix} \quad
+D=\begin{bmatrix} 
+| & & | \\
+| & & | \\
+\end{bmatrix}
+\]
+
+\textcolor{orange}{DA FINIRE}
 
 
 \newpage
 \section{Bibliografia}
 \begin{thebibliography}{99}
-\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
-\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
-\bibitem{nome_rif} Nome Cognome,Titolo del Libro, Casa Editrice, Anno Di Pubblicazione.
+
+\bibitem{brunton-kutz2022} 
+Steven L. Brunton, J. Nathan Kutz, 
+\textit{Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and Control}, 
+2nd Edition, Kindle Edition, Cambridge University Press, 2022.
+
+\bibitem{gal} 
+Enrico Schlesinger, 
+\textit{Algebra lineare e geometria}, 
+Zanichelli, 2017.
+
+\bibitem{golub-vanloan2013}
+Gene H. Golub, Charles F. Van Loan,
+\textit{Matrix Computations},
+Johns Hopkins Studies in the Mathematical Sciences, volume 3,
+Johns Hopkins University Press, 2013. 
+
+\bibitem{mat_num} A. Quarteroni, R. Sacco, F. Saleri, P. Gervasio, \textit{Matematica Numerica}, 4a edizione, Springer, 2013. 
+
 \end{thebibliography}
+
+\newpage
+\appendix
+
+\section{Codici Matlab}
+\subsection{PCA - Princpipal Component Analysis}\label{pca}
+\begin{lstlisting}[
+frame=single,
+numbers=left,
+style=Matlab-editor,
+caption={PCA su un dataset gaussiano in $\mathbb{R}^3$},
+label={lst:code1}]
+% Parametri della distribuzione gaussiana
+mu = [0 0 0]; % Media
+sigma = [1 0.5 0.2; 0.5 1 0.3; 0.2 0.3 1]; % Matrice di covarianza
+% Generazione del dataset casuale distribuito gaussianamente in R^3
+rng(42); % Impostiamo il seed per la replicabilita
+n = 400; % Numero di punti nel dataset
+data = mvnrnd(mu, sigma, n); % Generiamo i dati casuali
+% Calcolo della PCA
+coeff = pca(data); % Calcoliamo i coefficienti della PCA
+% Plot del dataset e dei vettori della PCA
+% Plot dei punti
+scatter3(data(:,1), data(:,2), data(:,3), 'MarkerEdgeColor', 'k'); 
+hold on;
+% Primo, Secondo e Terzo vettore della PCA
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,1), coeff(2,1), coeff(3,1), 'r', 'LineWidth', 2); 
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,2), coeff(2,2), coeff(3,2), 'g', 'LineWidth', 2);
+quiver3(mean(data(:,1)), mean(data(:,2)), mean(data(:,3)), ...
+        coeff(1,3), coeff(2,3), coeff(3,3), 'b', 'LineWidth', 2);
+% Titoli e grafica 
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('PCA');
+grid on; axis equal;
+legend({'Dati', 'Componente 1', 'Componente 2', 'Componente 3'});
+\end{lstlisting}
+\newpage
+\subsection{Compressione delle immagini}\label{img}
+\begin{lstlisting}[
+frame=single,
+numbers=left,
+style=Matlab-editor,
+caption = Approssimazione di un'immagine con il Teorema di Eckart-Young]
+function compress_image(image_path, k)
+    img = imread(image_path);
+    if size(img, 3) == 3
+        % Conversione dell'immagine in scala di grigi
+        img = rgb2gray(img);
+    end    
+    % Converti l'immagine in una variabile double per il calcolo SVD
+    img_double = double(img);
+    [U, S, V] = svd(img_double);
+    U_k = U(:, 1:k);
+    S_k = S(1:k, 1:k);
+    V_k = V(:, 1:k);
+    % Ricostruzione dell'immagine compressa
+    img_compressed = U_k * S_k * V_k';
+    % Riconversione ad immagine
+    img_compressed = uint8(img_compressed);
+    figure;
+    subplot(1, 2, 1);
+    imshow(img);
+    title('Immagine Originale'); 
+    subplot(1, 2, 2);
+    imshow(img_compressed);
+    title(['Immagine Compressa con k = ', num2str(k)]);
+end
+\end{lstlisting}
+\newpage
+\subsection{Equazione del Calore con condizioni miste}\label{heat}
+\begin{lstlisting}[
+frame=single,
+numbers=left,
+style=Matlab-editor,
+caption = Eulero Implicito con condizioni al bordo miste]
+function [x,t,U] = calore_EI_ND(L,N,T,K,ua1,ub,f,u0)
+% Calcolo passo di discretizzazione in spazio e tempo
+h=2*L/N;
+tau=T/K;
+% Inizializzazione dei vettori t
+t=linspace(0,T,K+1);
+t=t';
+% Inizializzazione del vettore x
+x=linspace(-L,L,N+1);
+x=x';
+% Inizializzazione della matrice soluzione u
+U=zeros(N+1,K+1);
+% Condizione iniziale
+U(:,1)=u0(x);
+% Condizioni al bordo
+U(end,:)=ub(t);
+% Costruzione in formato sparso della matrice A
+e=ones(N,1);
+A=spdiags([-e 2*e -e],[1 0 -1],N,N);
+A(1,1)=2;
+A(1,2)=-2;
+A=(tau/h^2)*A;
+I=eye(N,N);
+% Ciclo iterativo
+for k = 1:K
+    % Assemblaggio termine noto
+    F=f(x(1:end-1),t(k+1));
+    % Correzione del termine noto con le condizioni al bordo
+    F(1)=F(1)+(2/h)*ua1(t(k+1));
+    F(end)=F(end)+(1/h^2)*ub(t(k+1));
+    F=tau*F;
+    % Risoluzione del problema
+    U(1:end-1,k+1)=(I+A) \ (U(1:end-1,k)+F);
+end
+\end{lstlisting}
+\newpage
+\subsection{DMD}\label{dmd}
+\begin{lstlisting}[
+frame=single,
+numbers=left,
+style=Matlab-editor,
+caption = Calcolo della DMD]
+function [Phi, omega, lambda, b, Xdmd] = DMD(X1, X2, r, dt)
+%% DMD
+[U, S, V] = svd(X1, 'econ');
+r = min(r, size(U, 2));
+
+U_r = U(:, 1:r); % Troncamento a rango r
+S_r = S(1:r, 1:r);
+V_r = V(:, 1:r);
+Atilde = U_r' * X2 * V_r / S_r; 
+[W_r, D] = eig(Atilde);
+Phi = X2 * V_r / S_r * W_r; % Modi DMD
+
+lambda = diag(D); % Autovalori nel tempo discreto
+omega = log(lambda) / dt; % Autovalori nel tempo continuo
+
+%% Calcolo delle ampiezze dei modi DMD b
+x1 = X1(:, 1);
+b = Phi \ x1;
+
+%% Ricostruzione DMD
+mm1 = size(X1, 2); % mm1 = m - 1
+time_dynamics = zeros(r, mm1);
+t = (0:mm1-1) * dt; % Vettore temporale
+for iter = 1:mm1
+    time_dynamics(:, iter) = (b .* exp(omega * t(iter)));
+end
+Xdmd = Phi * time_dynamics;
+
+end
+\end{lstlisting}
+
+\newpage
+\subsection{Modello S.E.I.R.D.}\label{seird}
+\begin{lstlisting}[
+frame=single,
+numbers=left,
+style=Matlab-editor,
+caption ={Sistema PDE con condizione di Neumann-Dirichlet}]
+function [x, t, S, E, I, R, D] = sistema_pde_ND(L, N, T, K, sa1, sb, ea1, eb, ia1, ib, ra1, rb, da1, db, u0_e, u0_i, u0_r, u0_d, beta_i, beta_e, alpha, gamma_e, gamma_i, delta, a_e, n_pop, v_s, v_e, v_i, v_r);
+% Calcolo passo di discretizzazione in spazio e tempo
+h = L / N;
+tau = T / K;
+% Inizializzazione dei vettori t e x
+t = linspace(0, T, K+1)';
+x = linspace(0, L, N+1)';
+% Inizializzazione delle matrici soluzione
+S = zeros(N+1, K+1);
+E = zeros(N+1, K+1);
+I = zeros(N+1, K+1);
+R = zeros(N+1, K+1);
+D = zeros(N+1, K+1);
+% Condizioni iniziali
+S(:, 1) = u0_s(x);
+E(:, 1) = u0_e(x);
+I(:, 1) = u0_i(x);
+R(:, 1) = u0_r(x);
+D(:, 1) = u0_d(x);
+% Condizioni al contorno
+S(end, :) = sb(t);
+E(end, :) = eb(t);
+I(end, :) = ib(t);
+R(end, :) = rb(t);
+D(end, :) = db(t);
+% Costruzione delle matrici A
+e = ones(N, 1);
+A_s = spdiags([-e 2*e -e], [-1 0 1], N, N) * (tau / h^2) * v_s*n_pop;
+A_e = spdiags([-e 2*e -e], [-1 0 1], N, N) * (tau / h^2) * v_e*n_pop;
+A_i = spdiags([-e 2*e -e], [-1 0 1], N, N) * (tau / h^2) * v_i*n_pop;
+A_r = spdiags([-e 2*e -e], [-1 0 1], N, N) * (tau / h^2) * v_r*n_pop;
+A_s(1,1)=2*tau/h^2*v_s*n_pop;
+A_s(1,2)=-2*tau/h^2*v_s*n_pop;
+A_e(1,1)=2*tau/h^2*v_e*n_pop;
+A_e(1,2)=-2*tau/h^2*v_e*n_pop;
+A_r(1,1)=2*tau/h^2*v_r*n_pop;
+A_r(1,2)=-2*tau/h^2*v_r*n_pop;
+A_i(1,1)=2*tau/h^2*v_i*n_pop;
+A_i(1,2)=-2*tau/h^2*v_i*n_pop;
+for k = 1:K
+    % Termini noti e correzioni per le condizioni al bordo
+    s = S(1:end-1, k);
+    e = E(1:end-1, k);
+    i = I(1:end-1, k);
+    r = R(1:end-1, k);
+    F_s = -beta_i * (1 - a_e / n_pop) .* s .* i - beta_e * (1 - a_e / n_pop) .* s .* e;
+    F_e = beta_i * (1 - a_e / n_pop) .* s .* i + beta_e * (1 - a_e / n_pop) .* s .* e - (alpha + gamma_e) * e;
+    F_i = alpha * e - (gamma_i + delta) * i;
+    F_r = gamma_e * e + gamma_i*i;
+    F_d = delta * i;
+    F_s(1)=F_s(1)+2*n_pop*v_s/h*sa1(t(k+1)); 
+    F_s(end)=F_s(end)+1*n_pop*v_s/h^2*sb(t(k+1)); 
+    F_e(1)=F_e(1)+2*n_pop*v_e/h*ea1(t(k+1));
+    F_e(end)=F_e(end)+1*n_pop*v_e/h^2*eb(t(k+1));
+    F_i(1)=F_i(1)+2*n_pop*v_i/h*ia1(t(k+1));
+    F_i(end)=F_i(end)+1*n_pop*v_i/h^2*ib(t(k+1));
+    F_r(1)=F_r(1)+2*n_pop*v_r/h*ra1(t(k+1));
+    F_r(end)=F_r(end)+1*n_pop*v_r/h^2*rb(t(k+1));
+    F_d(1)=F_d(1);
+    F_d(end)=F_d(end);
+    % Aggiornamento delle soluzioni
+    S(1:end-1, k+1) = (eye(N) + A_s) \ (s + tau * F_s);
+    E(1:end-1, k+1) = (eye(N) + A_e) \ (e + tau * F_e);
+    I(1:end-1, k+1) = (eye(N) + A_i) \ (i + tau * F_i);
+    R(1:end-1, k+1) = (eye(N) + A_r) \ (r + tau * F_r);
+    D(1:end-1, k+1) = D(1:end-1, k) + tau * F_d;
+end
+\end{lstlisting}
 
 \printindex
 
