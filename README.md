@@ -1,4 +1,4 @@
-### In-depth Study on SVD Matrix Factorization
+### In-depth Study on SVD Matrix Factorization and Dynamic Mode Decomposition - DMD. 
 **Final Examination for the Bachelor's Degree Course at the Polytechnic University of Milan**
 
 **Supervised by Professor Marco Verani**
