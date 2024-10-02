@@ -1,0 +1,517 @@
+\documentclass[serif]{beamer}
+\usetheme{Berlin}
+\usecolortheme{dolphin}
+
+% Definizione dei teoremi, proposizioni, ecc., numerati per sezione
+\newtheorem{thm}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{cor}{Corollary}
+\newcommand{\R}{\mathbb{R}} 
+\usepackage[italian]{babel}
+
+\setbeamersize{text margin left=0.25cm, text margin right=0.25cm}
+
+\setbeamertemplate{theorems}[numbered] % Template per numerazione
+
+\usepackage{media9} % Pacchetto per l'inclusione di video
+
+\title{Decomposizione ai valori singolari di una matrice e applicazioni alla Dynamic Mode Decomposition}
+\author{Candidato: Federico Maria Riva \\ Relatore: Professor M. Verani}
+\date{24 Settembre 2024}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \tableofcontents
+\end{frame}
+
+\begin{frame}{Obiettivo}
+\begin{itemize}
+    \item Presenteremo due strumenti di primaria importanza nell'ambito della matematica applicata: la decomposizione ai valori singolari e la Dynamic Mode Decomposition
+    \item  Studieremo come le proprietà della Singular Value Decomposition possono essere applicate alla DMD
+    \item Applicheremo i risultati ottenuti al modello epidemiologico S.E.I.R.D. 
+\end{itemize}
+\end{frame}
+
+\section{Singular Value Decomposition - SVD}
+
+\subsection{Definizione}
+\begin{frame}{Fattorizzazione SVD}
+\begin{definition}
+Sia $A\in\mathbb{R}^{m\times n}$, oppure  $A\in\mathbb{C}^{m\times n}$, e \( Rg(A)=r\) allora la decomposizione ai valori singolari di una matrice è definita come:
+\[
+A = U \Sigma V^\top      
+\]
+Dove: 
+\begin{itemize}
+    \item \(U \in \R^{m \times m}\) è la matrice contenente i \textit{vettori singolari di sinistra} di \(A\), ovvero gli autovalori di \(A A^\top\)
+    \item \( \Sigma \in \R^{m \times n} \) è la matrice contenente i \textit{valori singolari} di \(A\), ovvero le radici quadrate degli autovalori in comune di \(AA^\top\) e \(A^\top A\)
+    \item \( V \in \R^{n \times n} \) è la matrice composta dagli autovettori di \( A^\top A\) detti anche \textit{vettori singolari di destra}
+\end{itemize}
+\end{definition}
+\end{frame}
+
+\begin{frame}
+\[
+A = 
+\begin{bmatrix}
+| & | & & | \\
+\mathbf{u}_1 & \mathbf{u}_2 & \cdots & \mathbf{u}_m \\
+| & | & & |
+\end{bmatrix} 
+\begin{bmatrix}
+\sigma_1 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & \sigma_2 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots  & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_r & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0
+\end{bmatrix} \begin{bmatrix}
+| & | & & | \\
+\mathbf{v}_1 & \mathbf{v}_2 & \cdots & \mathbf{v}_n \\
+| & | & & |
+\end{bmatrix} ^\top      
+\]
+\end{frame}
+
+\begin{frame}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth,height=5.35cm]{geo.png}
+    \caption{Illustrazione in $\R^2$}
+    \label{fig:geo}
+\end{figure} 
+\end{frame}
+
+\subsection{Applicazioni}
+\begin{frame}
+\begin{proposition}
+\textbf{Fattorizzazione SVD e matrice pseudoinversa}\\
+\textit{Hp:} Sia $A \in \R^{m \times n}$ e $A=U\Sigma V^T$ la sua decomposizione a valori singolari\\
+\textit{Ts:} La matrice pseudoinversa di $A$ è $A^+=V\Sigma^+U^T \ \in \R^{m \times n}$ dove i valori singolari di $A^+$ sono i reciproci dei valori singolari di $A$ 
+\end{proposition}
+\end{frame}
+
+\begin{frame}
+\begin{proposition}
+\textbf{Soluzione ai Minimi Quadrati}\\
+\textit{Hp:} Sia $A \in \mathbb{R}^{m \times n}$ una matrice di rango massimo con $m \geq n$, e sia $\mathbf{b} \in \mathbb{R}^m$ e \( A= U' \Sigma' V'^\top \) la fattorizzazione SVD ridotta\\
+\textit{Ts:} Per il sistema di equazioni lineari sovradeterminato $A\mathbf{x} = \mathbf{b}$, la soluzione ai minimi quadrati $\mathbf{x}^*$ risolve il seguente problema:
+\[
+\mathbf{x^*} = \underset{\mathbf{x} \in \mathbb{R}^n}{\mathrm{arg\,min}} \, \| A\mathbf{x} - \mathbf{b} \|_2
+\]
+Inoltre, la soluzione è data da:
+\[
+\mathbf{x}^* = (A^\top A)^{-1}A^\top \mathbf{b} = V' \Sigma'^{-1} U'^\top \mathbf{b}.
+\]
+\end{proposition}
+\end{frame}
+
+\section{Dynamic Mode Decomposition - DMD}
+\subsection{Definizione}
+\begin{frame}{Dynamic Mode Decomposition - DMD}
+\begin{itemize}
+    \item Dato un insieme di osservazioni spazio-temporali composte da \(m\) parametri in \(n\) istanti di tempo equidistanti \[ \{\mathbf{x}(t_k),\mathbf{x}(t_k')\}_{k=1}^n \subset \R^m \ e \ t_k'=t_k + \Delta t \]  l'obiettivo della DMD è individuare la matrice \(A\) che descriva al meglio l'evoluzione del sistema dinamico che ha prodotto i dati
+\end{itemize}
+
+\[\mathbf{x}_{k+1} \simeq A\mathbf{x}_k\]
+
+\end{frame}
+\begin{frame}
+\begin{itemize}
+    \item Le osservazioni possono essere racchiuse in due matrici così costruite
+\end{itemize}
+
+\[ X= \begin{bmatrix}
+| & | &  & | \\
+\mathbf{x}(t_1) & \mathbf{x}(t_2) & \dots & \mathbf{x}(t_n)\\
+| & | & & |
+\end{bmatrix} \quad 
+X'= \begin{bmatrix}
+| & | &  & | \\
+\mathbf{x}(t_1') & \mathbf{x}(t_2') & \dots & \mathbf{x}(t_n')\\
+| & | & & |
+\end{bmatrix}
+\]
+\begin{itemize}
+    \item Una volta ottenuta la matrice \(A\) saremo in grado di ricostruire l'evoluzione del sistema a partire dalla condizione iniziale \(\mathbf{x}(t_1)\). \\
+    Il dataset ottenuto avrà la seguente formulazione
+\end{itemize}
+
+\[
+X \simeq
+\begin{bmatrix}
+| & | & & | & & | \\
+\mathbf{x}_1 & A \mathbf{x}_1 & \dots & A^i \mathbf{x}_1 & \dots &  A^{n-1}\mathbf{x}_1 \\
+| & | & & | & & | \\
+\end{bmatrix}
+\]
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+    \item Il problema dell'individuazione della matrice \(A\) può essere così formulato
+    \[A= \min_{M \in \R^{m \times m}}{\|X' -MX\|_F } \]
+     e tramite la  \textbf{Proposizione \ref{Minim}} otteniamo la seguente soluzione
+    \[ A= X' X^+ \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+\item Poiché nelle applicazioni di comune impiego i parametri osservati sono spesso dell'ordine di \( 10^6\) il calcolo della matrice \(A\) risulta essere computazionalmente ingestibile
+\item Per ovviare a questa problematica ricorriamo alla\textit{ Proper Orthogonal Decomposition} (\textbf{Teorema \ref{teo_pod}}) che permette di approssimare al meglio lo Span della matrice \(A\) con un minor numero di vettori.
+\end{itemize}
+\end{frame}
+
+\subsection{Implementazione}
+\begin{frame}{Algoritmo di Tu  \begin{small} Ref. [\ref{burton}] \end{small}}
+\begin{itemize}
+    \item \textbf{Step 1.} Calcoliamo la fattorizzazione SVD ridotta della matrice \(X = U' \Sigma' V'^\top\), dove \(U' \in \R^{m \times r}\), \(\Sigma' \in \R^{r \times r}\), e \(V' \in \R^{n \times r}\). Osserviamo che \(r\) può essere sia il rango della matrice che un valore a nostra discrezione minore di \(Rg(A)\): ridurre le dimensioni risulta cruciale per grandi matrici $X$ con rango non massimo, alleggerendo il costo computazionale. \\Le colonne di $U'$ sono i \textit{Modi} della \textit{Proper Orthogonal Decomposition}.
+
+    \item \textbf{Step 2.} Dal risultato della \textbf{Proposizione \ref{Minim}} sappiamo che \(A = X' X^+ = X' V' \Sigma'^{-1} U'^\top\). Per evitare una matrice \(A\) di dimensioni eccessive proiettiamo \(A\) sui \textit{Modi} di $U'$ ottenendo:
+    \[
+    \bar{A} = U'^\top A U' = U'^\top X' V' \Sigma'^{-1} \in \R^{r \times r}
+    \]
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+    \item \textbf{Step 3.} Calcoliamo la decomposizione spettrale di \(\bar{A}\): 
+    \[
+    \bar{A} W = W \Lambda
+    \]
+    dove \(W \in \R^{r \times r}\) contiene gli autovettori e \(\Lambda\) gli autovalori.
+
+    \item \textbf{Step 4.} I \textit{Modi} \(\Phi \in \R^{m \times r}\) vengono ricostruiti come:
+    \[
+    \Phi = X' V' \Sigma'^{-1} W
+    \]
+    Abbiamo ricavato gli autovalori di \(A\) senza calcolare esplicitamente la matrice di iterazione ottenendo:
+    \[
+    A \Phi = \Phi \Lambda
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ricostruzione del Sistema tramite DMD}
+\begin{itemize}
+    \item La ricostruzione delle osservazioni si basa su \(\mathbf{x}_k = A^{k-1} \mathbf{x}_1\) per \(k = 2, \dots, M\). Tuttavia, possiamo sfruttare i Modi della DMD. 
+    \item Con \(A \Phi = \Phi \Lambda\), possiamo esprimere \(A^{k-1}\) come:
+    \[
+    A^{k-1} = \Phi \Lambda^{k-1} \Phi^+
+    \]
+    \item La soluzione diventa:
+    \[
+    \mathbf{x}_k = \Phi \Lambda^{k-1} \Phi^+ \mathbf{x}_1 = \sum_{j=1}^{r} \phi_j \lambda_j^{k-1} b_j
+    \]
+    dove \(\mathbf{b} = \Phi^+ \mathbf{x}_1= ({W} {\Lambda})^{-1} \bar{\mathbf{x}}_1 \) con \( \mathbf{x}_1= U' \mathbf{\bar{x}}_1 \) e \(\lambda_j\) sono gli autovalori.
+\end{itemize}
+\end{frame}
+
+
+\subsection{Applicazione della DMD al modello epidemiologico S.E.I.R.D.}
+\begin{frame}{Modello Epidemiologico S.E.I.R.D}
+\begin{itemize}
+    \item Il modello S.E.I.R.D. (Suscettibili, Esposti, Infetti, Guariti e Deceduti) è un modello epidemiologico spazio-temporale
+\end{itemize}
+\[s,e,i,r,d \in \mathscr{C}^{2,1}: \ \ \Omega \times [0,T]  \rightarrow \R^+, \ \Omega \subset \R^n. \]
+\begin{tiny}
+\begin{equation*}
+\begin{cases}
+\frac{\partial s(\mathbf{x},t)}{\partial t}+ \beta_i \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ i(\mathbf{x},t) + \beta_e \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t)  \ e(\mathbf{x},t)  - \nabla \cdot (n_{pop} \  \nu_s \nabla s(\mathbf{x},t))=0 \\
+\frac{\partial e(\mathbf{x},t)}{\partial t} - \beta_i \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ i(\mathbf{x},t) - \beta_e \left(1-\frac{A_e}{n_{pop}} \right)s(\mathbf{x},t) \ e(\mathbf{x},t)  + \left( \alpha + \gamma_e \right)e(\mathbf{x},t) - \\ \hspace{8.7cm} + \nabla \cdot (n_{pop} \  \nu_e \nabla e(\mathbf{x},t))=0 \\
+\frac{\partial i(\mathbf{x},t)}{\partial t} - \alpha \  e(\mathbf{x},t) + \left( \gamma_i + \delta \right) i(\mathbf{x},t) - \nabla \cdot \left( n_{pop} \ \nu_i \nabla i(\mathbf{x},t) \right) =0 \\
+\frac{ \partial r(\mathbf{x},t)}{ \partial t} - \gamma_e \  e(\mathbf{x},t) - \gamma_i i(\mathbf{x},t) - \nabla \cdot \left(n_{pop} \ \nu_r \nabla i(\mathbf{x},t) \right) = 0 \\
+\frac{ \partial d(\mathbf{x},t)}{ \partial t} - \delta i(\mathbf{x},t) =0 \\
+\end{cases}
+\end{equation*}
+\end{tiny}
+
+\begin{itemize}
+    \item     La soluzione numerica del sistema produce un dataset ideale per l'applicazione della DMD composto da un elevato numero di osservazioni in istanti di tempo equidistanti fra loro
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Discretizzazione del Modello }
+\begin{itemize}
+    \item Consideriamo il modello semplificato analizzando un dominio spaziale monodimensionale, \(\Omega \subset \R  \), e tramite il metodo delle differenze finite all'indietro otteniamo il problema discreto 
+\end{itemize}
+\begin{tiny}
+
+\begin{equation*}
+\begin{cases}
+\frac{S_i^{n+1} - S_i^n}{\tau} - n_{pop} \nu_s \frac{S_{i+1}^{n+1} - 2S_i^{n+1} + S_{i-1}^{n+1}}{h^2} =  - \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n - \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n = :{f_S}_i^n \\
+
+\frac{E_i^{n+1} - E_i^n}{\tau} - n_{pop} \nu_e \frac{E_{i+1}^{n+1} - 2E_i^{n+1} + E_{i-1}^{n+1}}{h^2} =   \beta_i \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n I_i^n + \beta_e \left(1 - \frac{A_e}{n_{pop}} \right) S_i^n E_i^n = :{f_E}_i^n \\
+\frac{I_i^{n+1} - I_i^n}{\tau}  - n_{pop} \nu_i \frac{I_{i+1}^{n+1} - 2I_i^{n+1} + I_{i-1}^{n+1}}{h^2} =   \alpha E_i^n - \left( \gamma_i + \delta \right) I_i^n = :{f_I}_i^n \\
+\frac{R_i^{n+1} - R_i^n}{\tau} - n_{pop} \nu_r \frac{R_{i+1}^{n+1} - 2R_i^{n+1} + R_{i-1}^{n+1}}{h^2} =  \gamma_e E_i^n + \gamma_i I_i^n = :{f_R}_i^n \\
+\frac{D_i^{n+1} - D_i^n}{\tau} =  \delta I_i^n =:{f_D}_i^n \\
+\end{cases}
+\end{equation*}
+\end{tiny}
+\end{frame}
+
+\begin{frame}{Condizioni Iniziali e  agli Estremi}
+\begin{small}
+\begin{equation*}
+\begin{cases}
+s(x,0)=s_0(x)= e^{-(x+1)^4}+e^{- \frac{(x-0.35)^2}{10^{-2}}} + \frac18 \left( e^{- \frac{(x-0.62)^4}{10^{-5}}} + e^{- \frac{(x-0.52)^4}{10^{-5}}} \right + \\ \left \hspace{0.1cm} + e^{- \frac{(x-0.42)^4}{10^{-5}}} \right)  + \frac{1}{4}e^{- \frac{(x-0.735)^4}{10^{-5}}};  \hspace{0.65cm} \frac{ \partial s(0,t)}{\partial x} = \phi_a= 0 ; \quad s(0,t)=\phi_b=0 \\
+e(x,0)=e_0(x)= \frac{1}{20}e^{- \frac{(x-0.735)^4}{10^{-5}}}; \hspace{0.6cm} \frac{ \partial e(0,t)}{\partial x} = \phi_a = 0 ; \quad e(0,t)=\phi_b=0 \\
+i(x,0)=i_0(x)= 0; \hspace{2.5cm} \frac{ \partial i(0,t)}{\partial x} = \phi_a= 0 ; \quad i(0,t)=\phi_b=0 \\
+r(x,0)=r_0(x)= 0; \hspace{2.4cm} \frac{ \partial r(0,t)}{\partial x} = \phi_a=0 ; \quad r(0,t)=\phi_b=0 \\
+d(x,0)=d_0(x)=0; \hspace{2.4cm} \frac{ \partial d(0,t)}{\partial x} = \phi_a =0 ; \quad d(0,t)=\phi_b=0
+\end{cases}
+\end{equation*}  
+\end{small}
+\end{frame}
+
+\begin{frame}{Formulazione Matriciale}
+\[  
+\mathbf{\tilde{s}},\mathbf{\tilde{e}},\mathbf{\tilde{i}},\mathbf{\tilde{r}}, \mathbf{\tilde{d}} \in \R^N \\
+\]
+\begin{equation*}
+\begin{cases}
+\mathbf{\tilde{s}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_s A_h )^{-1} (\mathbf{\tilde{s}}^n + \tau \mathbf{F_s}^n) \\
+\mathbf{\tilde{e}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_e A_h )^{-1} (\mathbf{\tilde{e}}^n + \tau \mathbf{F_e}^n) \\
+\mathbf{\tilde{i}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_i A_h )^{-1} (\mathbf{\tilde{i}}^n + \tau \mathbf{F_i}^n) \hspace{1cm} \forall \ n=0,\dots,M \\
+\mathbf{\tilde{r}}^{n+1}= (I_N+ \tau \ n_{pop} \ v_r A_h)^{-1} (\mathbf{\tilde{r}}^n + \tau \mathbf{F_r}^n ) \\
+\mathbf{\tilde{d}}^{n+1}= \mathbf{\tilde{d}}^n + \tau \ \mathbf{F_d}^n \\ 
+\end{cases}
+\end{equation*}
+\end{frame}
+
+\begin{frame}
+\begin{tiny}
+\begin{equation*}
+A_h= \frac{1}{h^2} \begin{bmatrix}
+2 & -2 & 0 & \dots & 0 \\
+-1 & 2 & -1 & \dots & \vdots\\
+0 & \ddots & \ddots & \ddots & 0 \\
+\vdots& \dots & -1& 2& -1 \\
+0 & \dots & 0& -1 & 2
+\end{bmatrix} \in \R^{N \times N} 
+\quad
+\mathbf{F_S}^n = \begin{bmatrix} {f_S}_0^n + \frac{2 n_{pop} v_s \phi_a}{h}\\ {f_S}_2^n \\ \vdots \\ {f_S}_N^n + \frac{n_{pop} v_s \phi_b}{h^2} \end{bmatrix} \in \R^N 
+\end{equation*}
+\begin{equation*}
+\mathbf{F_E}^n = \begin{bmatrix} {f_E}_0^n + \frac{2 n_{pop} v_e \phi_a}{h}\\ {f_E}_2^n \\ \vdots \\ {f_E}_N^n + \frac{n_{pop} v_e \phi_b}{h^2} \end{bmatrix}\in \R^N \quad
+\mathbf{F_I}^n =\begin{bmatrix} {f_I}_0^n + \frac{2 n_{pop} v_i \phi_a}{h}\\ {f_I}_2^n \\ \vdots \\ {f_I}_N^n + \frac{n_{pop} v_i \phi_b}{h^2}\end{bmatrix} \in \R^N \quad
+\mathbf{F_R}^n =\begin{bmatrix} {f_R}_0^n +  \frac{2 n_{pop} v_r \phi_a}{h} \\ {f_R}_2^n \\ \vdots \\ {f_R}_N^n + \frac{n_{pop} v_r \phi_b}{h^2}\end{bmatrix} \in \R^N 
+\end{equation*}
+\end{tiny}
+\end{frame}
+
+\begin{frame}{Parametri del Modello Epidemiologico}
+\begin{small}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Parametro} & \textbf{Valore} \\
+\hline
+$\beta_i$ & 0.375 \\
+\hline
+$\beta_e$ & 0.375 \\
+\hline
+$\alpha$ & 0.09375 \\
+\hline
+$\gamma_e$ & 0.125 \\
+\hline
+$\gamma_i$ & 0.03125 \\
+\hline
+$\delta$ & 0.0046875 \\
+\hline
+$a_e$ & 0 \\
+\hline
+$n_{\text{pop}}$ & 1 \\
+\hline
+$v_s$ & $3.75 \times 10^{-5}$ \\
+\hline
+$v_e$ & $0.75 \times 10^{-3}$ \\
+\hline
+$v_i$ & $0.75 \times 10^{-10}$ \\
+\hline
+$v_r$ & $3.75 \times 10^{-5}$ \\
+\hline
+\end{tabular}
+\label{tab:parameters}
+\end{table}
+\end{small}   
+\end{frame}
+
+
+\begin{frame}{Soluzione Numerica}
+\begin{figure}[H]
+	\centering
+    \includegraphics[width = \textwidth]{seird.png}
+    \caption{Soluzione numerica del sistema di PDE }
+    \label{fig:approx}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Ricostruzione del Modello S.E.I.R.D}
+\[
+X=\begin{bmatrix}
+    | & & | \\
+    \mathbf{s}_1  & \dots & \mathbf{s}_{M-1} \\ 
+    | & & | \\
+    \mathbf{e}_1    & \dots & \mathbf{e}_{M-1} \\ 
+    | & & | \\
+    \mathbf{i}_1  & \dots  & \mathbf{i}_{M-1} \\
+    | & & | \\
+    \mathbf{r}_1 & \dots & \mathbf{r}_{M-1} \\ 
+    | & & | \\
+    \mathbf{d}_1 & \dots & \mathbf{d}_{M-1} \\
+    | & & | \\
+\end{bmatrix}  \hspace{2cm} X'=\begin{bmatrix}
+    | & & | \\
+    \mathbf{s}_2  & \dots & \mathbf{s}_{M} \\ 
+    | & & | \\
+    \mathbf{e}_2    & \dots & \mathbf{e}_{M} \\ 
+    | & & | \\
+    \mathbf{i}_2  & \dots  & \mathbf{i}_{M} \\
+    | & & | \\
+    \mathbf{r}_2 & \dots & \mathbf{r}_{M} \\ 
+    | & & | \\
+    \mathbf{d}_2 & \dots & \mathbf{d}_{M} \\
+    | & & | \\
+\end{bmatrix} 
+\]
+    
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \includemedia[
+            width=\linewidth,
+            height=0.5675\linewidth, % Adjusted for 16:9 aspect ratio
+            activate=pageopen,
+            addresource=video_sei.mp4,
+            flashvars={
+                source=video_sei.mp4
+                &autoPlay=true
+                &loop=true
+            }
+        ]{}{VPlayer.swf}
+    \end{center}
+\end{frame}
+
+
+\begin{frame}
+    \begin{center}
+        \includemedia[
+            width=\linewidth,
+            height=0.5675\linewidth, % Adjusted for 16:9 aspect ratio
+            activate=pageopen,
+            addresource=video_rd.mp4,
+            flashvars={
+                source=video_rd.mp4
+                &autoPlay=true
+                &loop=true
+            }
+        ]{}{VPlayer.swf}
+    \end{center}
+\end{frame}
+
+\section{Conclusioni e Sviluppi Futuri}
+\begin{frame}{Conclusioni e Sviluppi Futuri}
+\textbf{Conclusioni:} \\
+Nel corso di questo lavoro abbiamo messo in evidenza due aspetti principali
+\begin{itemize}
+    \item L'importanza dell'uso della decomposizione ai valori singolari per l'implementazione della DMD nel caso di dataset di grandi dimensioni
+    \item La capacità della DMD di ricostruire le dinamiche del modello epidemiologico SEIRD 
+\end{itemize} \\ 
+\textbf{Sviluppi futuri:}
+\begin{itemize}
+    \item Estensione del modello SEIRD a più dimensioni spaziali e ricostruzione del dataset bidimensionale tramite DMD
+\end{itemize}
+\end{frame}
+
+
+\section{Bibliografia}
+\begin{frame}{Bibliografia}
+\begin{tiny}
+\begin{thebibliography}{99}
+
+\bibitem{brunton-kutz2022}\label{burton} 
+Steven L. Brunton, J. Nathan Kutz, 
+\textit{Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and Control}, 
+2nd Edition, Kindle Edition, Cambridge University Press, 2022.
+
+\bibitem{gal} 
+Enrico Schlesinger, 
+\textit{Algebra lineare e geometria}, 
+Zanichelli, 2017.
+
+\bibitem{golub-vanloan2013}
+Gene H. Golub, Charles F. Van Loan,
+\textit{Matrix Computations},
+Johns Hopkins Studies in the Mathematical Sciences, volume 3,
+Johns Hopkins University Press, 2013. 
+
+\bibitem{mat_num} 
+A. Quarteroni, R. Sacco, F. Saleri, P. Gervasio, 
+\textit{Matematica Numerica}, 
+4a edizione, Springer, 2013.
+
+\bibitem{barros2021dynamic}
+Gabriel F. Barros, Malu Grave, Alex Viguier, Alessandro Reali, Alvaro L. G. A. Coutinho, 
+\textit{Dynamic mode decomposition in adaptive mesh refinement and coarsening simulations}, 
+Engineering with Computers, 38, 4241--4268, Springer, 2022. \\
+DOI: \textcolor{blue}{\href{https://doi.org/10.1007/s00366-021-01485-6}{10.1007/s00366-021-01485-6}}.
+
+\bibitem{volkwein_pod}\label{pod}
+S. Volkwein, \textit{Model Reduction Using Proper Orthogonal Decomposition}, Lecture notes, available at \textcolor{blue}{\href{https://www.math.uni-konstanz.de/numerik/personen/volkwein/teaching/POD-Vorlesung.pdf}{POD-Vorlesung.pdf}}.
+
+\end{thebibliography}
+\end{tiny}
+\end{frame}
+
+\section*{Slide Aggiuntive}
+\begin{frame}
+\begin{proposition}\label{prop 1}
+\textit{Hp:} Data $M\in\mathbb{R}^{m \times n}$\\
+\textit{Ts:} $D=M^\top      M$ e $S=MM^\top      $ sono  matrici simmetriche e semi definite positive.
+% semidefinite
+\end{proposition}
+
+\begin{proposition}\label{prop 2}
+\textit{Hp:} Sia $A \in \R^{m \times n}$ con $m \geq n$ e $\{\lambda_i(A^\top A)\}_{i=1}^{n}$ e $\{\lambda_j(A A^\top)\}_{j=1}^{m} $ gli autovalori di ciascuna matrice quadrata \\
+\textit{Ts:} $ \{\lambda_i(A^\top A)\}_{i=1}^{n} \subset \{\lambda_j(A A^\top)\}_{j=1}^{m} $ .
+\end{proposition}
+
+\begin{corollary}
+\textit{Hp:} Sia $M \in \R^{n \times n}$ con autovalori $\mathbf{\lambda}=[\lambda_1, \dots, \lambda_n ]$\\
+\textit{Ts:} Gli autovalori di $M^\top      M \ \text{e} \ MM^\top      $ sono gli stessi e valgono $\mathbf{\lambda}^2=[\lambda_1^2, \dots, \lambda_n^2 ]$
+\end{corollary}
+\end{frame}
+
+\begin{frame}
+\begin{proposition}\label{Minim}
+\textbf{}\\
+\textit{Hp:} Data una matrice \( M \in \R^{m \times n} \) con \( m \geq n \), \(\operatorname*{Rg}(M) = r\) e \(M= U\Sigma V^\top \) la sua decomposizione SVD \\
+\textit{Ts:} Allora \(M^+={\operatorname*{argmin}}_{B \in \R^{n \times m}}{\|MB - I_m\|_F }\) dove con \(M^+\) denotiamo la matrice pseudoinversa e grazie alle proprietà della fattorizzazione SVD siamo in grado di trovare la sua formulazione esplicita \( M^+:=V\Sigma^+U^\top \), dove \( \Sigma_{i,j}^+=0 \ \text{se} \ \Sigma_{i,j}=0 \ \text{e} \ \Sigma_{i,j}^+= \frac{1}{\sigma_i} \ \text{se} \  \Sigma_{i,j}=\sigma_i \).
+\end{proposition}
+\end{frame}
+
+\begin{frame}
+\begin{theorem}\label{teo_pod}
+\textbf{Singular Value e Proper Orthogonal Decompositions - Ref. [\ref{pod}]}\\
+\textit{Hp:} Sia \( Y \in \R^{m \times n}\) una matrice di rango \(d \leq \min{{m,n}}\) e  sia \(Y=U \Sigma V^\top\) la sua scomposizione a valori singolari.\\
+\textit{Ts:} Allora \( \forall \ l \in \{1,\dots,d\} \) la soluzione al seguente problema di ottimizzazione vincolata
+\[
+\max_{\mathbf{\tilde{u}}_1, \dots, \mathbf{\tilde{u}}_l \in \R^m} \sum_{i=1}^l \sum_{j=1}^n | \mathbf{y}_j^\top \mathbf{\tilde{u}}_i |^2 \quad s.t. \quad  \mathbf{\tilde{u}}_i^\top \mathbf{\tilde{u}}_j = \delta_{i,j} \ 1 \leq i,j \leq l
+\]
+ è data dai vettori singolari \( \{ \mathbf{u}_i\}_{i=1}^l\) ovvero le prime \(l\) colonne di U.
+\end{theorem}
+\end{frame}
+
+\end{document}
