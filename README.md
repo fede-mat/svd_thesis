@@ -1,7 +1,7 @@
 # Bachelor's Thesis in Mathematical Engineering
 
 ## Title
-**Decomposizione ai valori singolari di una matrice e applicaziono alla Dynami Mode Decomposition**
+**Decomposizione ai valori singolari di una matrice e applicazioni alla Dynamic Mode Decomposition**
 
 ## Author
 Federico Riva
