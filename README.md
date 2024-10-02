@@ -10,7 +10,7 @@ Federico Riva
 Professor Marco Verani
 
 ## Overview
-This repository contains the materials for my final thesis in Mathematical Engineering, completed under the supervision of Professor Marco Verani. The thesis focuses on **Singular Value Decomposition (SVD)** and **Dynamic Mode Decomposition (DMD)**, with an application to the **SEIRD model** (Susceptible-Exposed-Infected-Recovered-Deceased) used for modeling epidemics.
+This repository contains the materials for my final thesis in Mathematical Engineering, completed under the supervision of Professor Marco Verani. The thesis focuses on **Singular Value Decomposition (SVD)** and **Dynamic Mode Decomposition (DMD)**, with an application to the **SEIRD model** (Susceptible-Exposed-Infected-Recovered-Deceased) used for modeling epidemics. Particular attention is given to reducing computational cost by appropriately leveraging matrix properties.
 
 ## Topics Covered
 - **Singular Value Decomposition (SVD)**: A matrix factorization technique that is fundamental in many applications, including data compression, noise reduction, and system analysis.
